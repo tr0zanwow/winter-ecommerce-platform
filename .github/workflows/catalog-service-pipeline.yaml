@@ -1,15 +1,15 @@
-name: Order Service CI/CD Pipeline
+name: Catalog Service CI/CD Pipeline
 
 on:
   push:
     branches:
       - develop
     paths:
-      - 'backend/order-service/**'
+      - 'backend/catalog-service/**'
 
 jobs:
   build-and-deploy:
-    name: Build & Deploy Order Service
+    name: Build & Deploy Catalog Service
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -27,8 +27,8 @@ jobs:
 
       - name: Build, Tag, and Push Docker Image
         run: |
-          docker build -t 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-order-service:latest ./backend/order-service
-          docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-order-service:latest
+          docker build -t 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-catalog-service:latest ./backend/catalog-service
+          docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-catalog-service:latest
 
       - name: Update Kubeconfig
         run: |
@@ -36,5 +36,6 @@ jobs:
 
       - name: Deploy Manifests to EKS
         run: |
-          kubectl apply -f backend/order-service/k8s/deployment.yaml
-          kubectl rollout restart deployment/order-service-deployment
+          kubectl apply -f backend/catalog-service/k8s/deployment.yaml
+          kubectl apply -f frontend/k8s/ingress.yaml
+          kubectl rollout restart deployment/catalog-service-deployment

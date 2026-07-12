@@ -15,7 +15,20 @@ async function getServiceHealth(url: string, serviceName: string): Promise<Healt
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
-    return await res.json();
+    const data = await res.json();
+    
+    let messageText = data.message;
+    if (!messageText && data.runtimeEngine && data.virtualThreadsActive) {
+      messageText = `Runtime Engine: ${data.runtimeEngine} | Virtual Threads Active: ${data.virtualThreadsActive}`;
+    }
+    if (!messageText) {
+      messageText = `Connected to ${serviceName} successfully.`;
+    }
+    
+    return {
+      status: data.status || "UNKNOWN",
+      message: messageText
+    };
   } catch (error: any) {
     return {
       status: "OFFLINE",
@@ -25,31 +38,30 @@ async function getServiceHealth(url: string, serviceName: string): Promise<Healt
 }
 
 export default async function Home() {
-  // Query EKS internal service endpoint directly from BFF
   const orderServiceHealth = await getServiceHealth(
-    'http://order-service.backend.svc.cluster.local:8080/api/health',
+    'https://projects.pranilrathod.dev/winter/api/orders/health',
     'Order Service'
   );
 
   // Mock checking other internal cluster endpoints for dashboard completeness
   const paymentServiceHealth = await getServiceHealth(
-    'http://payment-service.backend.svc.cluster.local:8080/api/health',
-    'Payment Service'
+    'https://projects.pranilrathod.dev/winter/api/payments/health',
+    'Mock Payment Service'
   );
   const inventoryServiceHealth = await getServiceHealth(
-    'http://inventory-service.backend.svc.cluster.local:8080/api/health',
+    'https://projects.pranilrathod.dev/winter/api/inventory/health',
     'Inventory Service'
   );
   const catalogServiceHealth = await getServiceHealth(
-    'http://catalog-service.backend.svc.cluster.local:8080/api/health',
+    'https://projects.pranilrathod.dev/winter/api/products/health',
     'Catalog Service'
   );
 
   const services = [
-    { name: "Order Service", endpoint: "order-service", data: orderServiceHealth },
-    { name: "Payment Service", endpoint: "payment-service", data: paymentServiceHealth },
-    { name: "Inventory Service", endpoint: "inventory-service", data: inventoryServiceHealth },
-    { name: "Catalog Service", endpoint: "catalog-service", data: catalogServiceHealth },
+    { name: "Order Service", endpoint: "order-service", port: 8081, data: orderServiceHealth },
+    { name: "Mock Payment Service", endpoint: "payment-service", port: 8080, data: paymentServiceHealth },
+    { name: "Inventory Service", endpoint: "inventory-service", port: 8080, data: inventoryServiceHealth },
+    { name: "Catalog Service", endpoint: "catalog-service", port: 3000, data: catalogServiceHealth },
   ];
 
   return (
@@ -95,7 +107,7 @@ export default async function Home() {
         {/* EKS Core Status Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((service, index) => {
-            const isOnline = service.data.status === "UP";
+            const isOnline = service.data.status === "UP" || service.data.status === "ONLINE";
             const isOffline = service.data.status === "OFFLINE";
             
             return (
@@ -107,7 +119,7 @@ export default async function Home() {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-white/5 to-transparent pointer-events-none" />
                 <div className="flex items-start justify-between">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                    Namespace: backend
+                    Namespace: default
                   </span>
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                     isOnline 
@@ -127,11 +139,11 @@ export default async function Home() {
                   {service.name}
                 </h3>
                 
-                <p className="mt-2 text-xs font-mono text-slate-500 overflow-ellipsis overflow-hidden whitespace-nowrap" title={`${service.endpoint}.backend.svc.cluster.local:8080`}>
-                  svc: {service.endpoint}.backend.svc.cluster.local
+                <p className="mt-2 text-xs font-mono text-slate-500 overflow-ellipsis overflow-hidden whitespace-nowrap" title={`${service.endpoint}.default.svc.cluster.local:${service.port}`}>
+                  svc: {service.endpoint}.default.svc.cluster.local:{service.port}
                 </p>
 
-                <div className="mt-6 pt-4 border-t border-slate-800/60">
+                 <div className="mt-6 pt-4 border-t border-slate-800/60">
                   <span className="text-xs text-slate-400 block font-semibold mb-1">Response Payload:</span>
                   <p className="text-xs text-slate-400 font-mono leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-900 min-h-[60px] flex items-center justify-start">
                     {service.data.message}

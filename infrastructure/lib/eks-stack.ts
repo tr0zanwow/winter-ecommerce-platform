@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as eks from 'aws-cdk-lib/aws-eks';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as rds from 'aws-cdk-lib/aws-rds';
 import { KubectlV30Layer } from '@aws-cdk/lambda-layer-kubectl-v30';
 import { Construct } from 'constructs';
 
@@ -68,5 +69,25 @@ export class WinterEksStack extends cdk.Stack {
       diskSize: 30,
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
     });
+
+    // STEP 1: Implement the RDS PostgreSQL Construct
+    const database = new rds.DatabaseInstance(this, 'WinterSharedDatabase', {
+      engine: rds.DatabaseInstanceEngine.postgres({
+        version: rds.PostgresEngineVersion.VER_16,
+      }),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
+      vpc: props.vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+      },
+      allocatedStorage: 20,
+      maxAllocatedStorage: 20,
+      storageType: rds.StorageType.GP2,
+      multiAz: false,
+      databaseName: 'winter_core',
+    });
+
+    // Security Boundary: Allow TCP 5432 ingress from EKS cluster worker nodes to database
+    database.connections.allowFrom(cluster.connections, ec2.Port.tcp(5432));
   }
 }

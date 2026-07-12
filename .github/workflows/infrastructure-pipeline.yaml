@@ -1,0 +1,47 @@
+name: Infrastructure CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/**'
+
+jobs:
+  cdk_orchestration:
+    name: CDK Orchestration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Node Environment Setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Ingest AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install Toolchain Dependencies
+        working-directory: infrastructure
+        run: npm ci
+
+      - name: Execute CDK Diff (Phase A)
+        if: github.event_name == 'pull_request'
+        working-directory: infrastructure
+        run: npx cdk diff
+
+      - name: Execute CDK Deploy (Phase B)
+        if: github.ref == 'refs/heads/main'
+        working-directory: infrastructure
+        run: npx cdk deploy --all --require-approval never
