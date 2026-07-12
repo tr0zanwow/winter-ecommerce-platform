@@ -3,7 +3,7 @@ name: Catalog Service CI/CD Pipeline
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
       - 'backend/catalog-service/**'
 

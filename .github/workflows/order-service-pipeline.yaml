@@ -3,7 +3,7 @@ name: Order Service CI/CD Pipeline
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
       - 'backend/order-service/**'
 
