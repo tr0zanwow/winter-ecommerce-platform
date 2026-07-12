@@ -1,0 +1,54 @@
+name: Inventory Service CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'backend/inventory-service/**'
+      - '.github/workflows/inventory-service-pipeline.yaml'
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Inventory Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'backend/inventory-service/package-lock.json'
+
+      - name: Cache dependencies and run compile check
+        run: |
+          cd backend/inventory-service
+          npm ci
+          npm run build
+
+      - name: Build, Tag, and Push Docker Image
+        run: |
+          docker build -t 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-inventory-service:latest ./backend/inventory-service
+          docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-inventory-service:latest
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-5bf7dcc0943642d3996ad81e136570a4
+
+      - name: Deploy Manifests to EKS & Track Rollout
+        run: |
+          kubectl apply -f backend/inventory-service/k8s/deployment.yaml
+          kubectl rollout status deployment/inventory-service-deployment --timeout=120s
