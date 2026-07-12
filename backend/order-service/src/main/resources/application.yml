@@ -2,14 +2,14 @@ server:
   port: 8081
   tomcat:
     threads:
-      max: 200 # Overridden by Virtual Threads optimization below
+      max: 200 # Overridden by Virtual Threads optimization
 
 spring:
   application:
     name: order-service
   threads:
     virtual:
-      enabled: true # ENFORCES PLATFORM-WIDE PROJECT LOOM CONCURRENCY
+      enabled: true
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:winter_orders}
