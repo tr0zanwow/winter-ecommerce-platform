@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-deployment
+  namespace: default
+  labels:
+    app: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+      - name: order-service
+        image: 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-order-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "120Mi"
+          limits:
+            cpu: "100m"
+            memory: "200Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service-service
+  namespace: default
+  labels:
+    app: order-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+  selector:
+    app: order-service
