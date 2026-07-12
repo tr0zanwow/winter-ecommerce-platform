@@ -37,3 +37,4 @@ jobs:
       - name: Deploy Manifests to EKS
         run: |
           kubectl apply -f backend/order-service/k8s/deployment.yaml
+          kubectl rollout restart deployment/order-service-deployment
