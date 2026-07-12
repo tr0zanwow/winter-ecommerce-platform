@@ -53,15 +53,15 @@ export default async function Home() {
     'Inventory Service'
   );
   const catalogServiceHealth = await getServiceHealth(
-    'https://projects.pranilrathod.dev/winter/api/catalog/health',
+    'https://projects.pranilrathod.dev/winter/api/products/health',
     'Catalog Service'
   );
 
   const services = [
-    { name: "Order Service", endpoint: "order-service-service", port: 8081, data: orderServiceHealth },
+    { name: "Order Service", endpoint: "order-service", port: 8081, data: orderServiceHealth },
     { name: "Mock Payment Service", endpoint: "payment-service", port: 8080, data: paymentServiceHealth },
     { name: "Inventory Service", endpoint: "inventory-service", port: 8080, data: inventoryServiceHealth },
-    { name: "Catalog Service", endpoint: "catalog-service", port: 8080, data: catalogServiceHealth },
+    { name: "Catalog Service", endpoint: "catalog-service", port: 3000, data: catalogServiceHealth },
   ];
 
   return (

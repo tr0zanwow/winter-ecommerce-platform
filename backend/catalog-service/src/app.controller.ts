@@ -9,4 +9,12 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('products/health')
+  getHealth() {
+    return {
+      status: 'ONLINE',
+      message: 'Node.js NestJS (Fastify) runtime engine is online.',
+    };
+  }
 }
