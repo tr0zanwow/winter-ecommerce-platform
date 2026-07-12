@@ -3,6 +3,9 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as eks from 'aws-cdk-lib/aws-eks';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as rds from 'aws-cdk-lib/aws-rds';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as snsSub from 'aws-cdk-lib/aws-sns-subscriptions';
 import { KubectlV30Layer } from '@aws-cdk/lambda-layer-kubectl-v30';
 import { Construct } from 'constructs';
 
@@ -89,5 +92,25 @@ export class WinterEksStack extends cdk.Stack {
 
     // Security Boundary: Allow TCP 5432 ingress from EKS cluster worker nodes to database
     database.connections.allowFrom(cluster.connections, ec2.Port.tcp(5432));
+
+    // STEP 2: Implement the Managed SNS & SQS Constructs
+    const orderEventsTopic = new sns.Topic(this, 'WinterOrderEventsTopic', {
+      topicName: 'WinterOrderEventsTopic',
+      displayName: 'Winter Order Events Messaging Hub',
+    });
+
+    const inventoryUpdateDlq = new sqs.Queue(this, 'WinterInventoryUpdateDlq', {
+      queueName: 'WinterInventoryUpdateDlq',
+    });
+
+    const inventoryUpdateQueue = new sqs.Queue(this, 'WinterInventoryUpdateQueue', {
+      queueName: 'WinterInventoryUpdateQueue',
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: inventoryUpdateDlq,
+      },
+    });
+
+    orderEventsTopic.addSubscription(new snsSub.SqsSubscription(inventoryUpdateQueue));
   }
 }
