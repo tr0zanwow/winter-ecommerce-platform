@@ -62,7 +62,7 @@ out/
 **/*.zip
 **/*.tar.gz
 **/*.rar
-.mvn/
+# .mvn/
 .flattened-pom.xml
 dependency-reduced-pom.xml
 
