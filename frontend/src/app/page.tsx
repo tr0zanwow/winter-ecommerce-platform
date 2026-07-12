@@ -34,7 +34,7 @@ export default async function Home() {
   // Mock checking other internal cluster endpoints for dashboard completeness
   const paymentServiceHealth = await getServiceHealth(
     'http://payment-service.backend.svc.cluster.local:8080/api/health',
-    'Payment Service'
+    'Mock Payment Service'
   );
   const inventoryServiceHealth = await getServiceHealth(
     'http://inventory-service.backend.svc.cluster.local:8080/api/health',
@@ -47,7 +47,7 @@ export default async function Home() {
 
   const services = [
     { name: "Order Service", endpoint: "order-service", data: orderServiceHealth },
-    { name: "Payment Service", endpoint: "payment-service", data: paymentServiceHealth },
+    { name: "Mock Payment Service", endpoint: "payment-service", data: paymentServiceHealth },
     { name: "Inventory Service", endpoint: "inventory-service", data: inventoryServiceHealth },
     { name: "Catalog Service", endpoint: "catalog-service", data: catalogServiceHealth },
   ];
