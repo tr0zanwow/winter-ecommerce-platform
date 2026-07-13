@@ -46,7 +46,7 @@ jobs:
 
       - name: Update Kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-5bf7dcc0943642d3996ad81e136570a4
+          aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
 
       - name: Deploy Manifests to EKS & Track Rollout
         run: |
