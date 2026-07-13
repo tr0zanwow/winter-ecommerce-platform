@@ -15,6 +15,7 @@ spec:
       labels:
         app: inventory-service
     spec:
+      serviceAccountName: inventory-service-sa
       containers:
       - name: inventory-service
         image: 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-inventory-service:latest

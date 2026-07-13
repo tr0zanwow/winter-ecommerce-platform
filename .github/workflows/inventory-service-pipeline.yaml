@@ -3,7 +3,7 @@ name: Inventory Service CI/CD Pipeline
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
       - 'backend/inventory-service/**'
       - '.github/workflows/inventory-service-pipeline.yaml'
