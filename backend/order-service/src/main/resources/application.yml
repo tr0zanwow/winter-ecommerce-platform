@@ -16,7 +16,7 @@ spring:
       region:
         static: us-east-1
       credentials:
-        instance-profile: true
+        instance-profile: false
 
 
   datasource:
