@@ -53,6 +53,17 @@ export class WinterEksStack extends cdk.Stack {
       ],
     });
 
+    // Grant admin access to our GitHub Actions runner using EKS Access Entry
+    new eks.AccessEntry(this, 'GitHubActionsRunnerAccessEntry', {
+      cluster: cluster,
+      principal: 'arn:aws:iam::880252974759:user/winter-github-actions-runner',
+      accessPolicies: [
+        eks.AccessPolicy.fromAccessPolicyName('AmazonEKSClusterAdminPolicy', {
+          accessScopeType: eks.AccessScopeType.CLUSTER,
+        }),
+      ],
+    });
+
     // Scale down coredns deployment replicas to 1 to fit in small t3.micro nodes
     new eks.KubernetesPatch(this, 'ScaleCoreDnsReplicas', {
       cluster,
