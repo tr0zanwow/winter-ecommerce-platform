@@ -15,6 +15,7 @@ spec:
       labels:
         app: order-service
     spec:
+      serviceAccountName: order-service-sa
       containers:
       - name: order-service
         image: 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-order-service:latest
@@ -39,11 +40,11 @@ spec:
               key: SPRING_DATASOURCE_PASSWORD
         resources:
           requests:
-            cpu: "50m"
-            memory: "120Mi"
-          limits:
             cpu: "100m"
-            memory: "200Mi"
+            memory: "256Mi"
+          limits:
+            cpu: "200m"
+            memory: "512Mi"
 ---
 apiVersion: v1
 kind: Service

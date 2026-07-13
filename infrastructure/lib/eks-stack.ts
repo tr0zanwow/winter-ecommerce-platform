@@ -112,5 +112,29 @@ export class WinterEksStack extends cdk.Stack {
     });
 
     orderEventsTopic.addSubscription(new snsSub.SqsSubscription(inventoryUpdateQueue));
+
+    // STEP 3: Implement Zero-Trust IAM Roles for Service Accounts (IRSA)
+    const orderServiceSA = cluster.addServiceAccount('OrderServiceSA', {
+      name: 'order-service-sa',
+      namespace: 'default'
+    });
+
+    orderServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: ['sns:Publish'],
+      resources: ['arn:aws:sns:us-east-1:880252974759:WinterOrderEventsTopic']
+    }));
+
+    const inventoryServiceSA = cluster.addServiceAccount('InventoryServiceSA', {
+      name: 'inventory-service-sa',
+      namespace: 'default'
+    });
+
+    inventoryServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:ChangeMessageVisibility'],
+      resources: [
+        'arn:aws:sns:us-east-1:880252974759:WinterInventoryUpdateQueue',
+        'arn:aws:sqs:us-east-1:880252974759:WinterInventoryUpdateQueue'
+      ]
+    }));
   }
 }
