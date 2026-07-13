@@ -44,6 +44,17 @@ export class ProductsService {
     }
     return product;
   }
+
+  async decrementStock(sku: string, quantity: number): Promise<any> {
+    const result = await this.productModel.updateOne({ sku }, { $inc: { stockCount: -quantity } }).exec();
+    try {
+      await this.cacheManager.del('winter_catalog_active_products');
+      await this.cacheManager.del('all_active_products');
+    } catch (error) {
+      console.error('Redis cache eviction error:', error);
+    }
+    return result;
+  }
 }
 
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body } from '@nestjs/common';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -13,6 +13,14 @@ export class ProductsController {
   @Post()
   async create(@Body() dto: any) {
     return this.productsService.create(dto);
+  }
+
+  @Patch('decrement-stock')
+  async decrementStock(@Body() items: { sku: string; quantity: number }[]) {
+    for (const item of items) {
+      await this.productsService.decrementStock(item.sku, item.quantity);
+    }
+    return { success: true };
   }
 }
 
