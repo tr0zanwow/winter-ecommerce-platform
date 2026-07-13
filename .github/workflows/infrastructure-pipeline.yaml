@@ -69,7 +69,7 @@ jobs:
           UPDATE_RES=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records/$RECORD_ID" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data "{\"type\":\"CNAME\",\"name\":\"projects.pranilrathod.dev\",\"content\":\"$ALB_DNS\",\"ttl\":1,\"proxied\":false}")
+            --data "{\"type\":\"CNAME\",\"name\":\"projects.pranilrathod.dev\",\"content\":\"$ALB_DNS\",\"ttl\":1,\"proxied\":true}")
 
           if echo "$UPDATE_RES" | grep -q '"success":true'; then
             echo "Cloudflare DNS mapping successfully synchronized to: $ALB_DNS"
