@@ -38,6 +38,36 @@ export class SqsConsumerService implements OnModuleInit {
           for (const message of data.Messages) {
             this.logger.log(`[INVENTORY WORKER] Intercepted Order Created Event Payload: ${message.Body}`);
 
+            try {
+              if (message.Body) {
+                const snsPayload = JSON.parse(message.Body);
+                const orderData = typeof snsPayload.Message === 'string' ? JSON.parse(snsPayload.Message) : snsPayload;
+
+                if (orderData && Array.isArray(orderData.items) && orderData.items.length > 0) {
+                  const decrementPayload = orderData.items.map((item: any) => ({
+                    sku: item.sku,
+                    quantity: item.quantity,
+                  }));
+
+                  this.logger.log(`Dispatching stock decrement to catalog service: ${JSON.stringify(decrementPayload)}`);
+
+                  const response = await fetch('http://catalog-service:3000/api/products/decrement-stock', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(decrementPayload),
+                  });
+
+                  this.logger.log(`[INVENTORY WORKER] Internal cluster response status: ${response.status} ${response.statusText}`);
+                  if (!response.ok) {
+                    const errorText = await response.text();
+                    this.logger.error(`Stock decrement failed on catalog service: ${errorText}`);
+                  }
+                }
+              }
+            } catch (err) {
+              this.logger.error('Failed to parse or dispatch stock decrement event payload', err);
+            }
+
             if (message.ReceiptHandle) {
               const deleteParams = {
                 QueueUrl: this.queueUrl,
