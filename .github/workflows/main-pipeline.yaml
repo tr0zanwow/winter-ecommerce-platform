@@ -238,6 +238,7 @@ jobs:
       - name: Deploy Manifests to EKS & Track Rollout
         run: |
           kubectl apply -f backend/inventory-service/k8s/deployment.yaml
+          kubectl rollout restart deployment/inventory-service-deployment
           kubectl rollout status deployment/inventory-service-deployment --timeout=120s
 
   deploy-frontend:
