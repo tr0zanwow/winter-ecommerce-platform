@@ -11,6 +11,14 @@ spring:
     virtual:
       enabled: true
 
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+      credentials:
+        instance-profile: false
+
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:winter_orders}
     username: ${DB_USER:postgres}

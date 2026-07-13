@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service-deployment
+  namespace: default
+  labels:
+    app: inventory-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+      - name: inventory-service
+        image: 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-inventory-service:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "48Mi"
+          limits:
+            cpu: "30m"
+            memory: "96Mi"

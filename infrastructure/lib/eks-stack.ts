@@ -20,7 +20,7 @@ export class WinterEksStack extends cdk.Stack {
     // Instantiate Amazon EKS Cluster with the required kubectlLayer for ALB Controller support
     const cluster = new eks.Cluster(this, 'WinterCluster', {
       vpc: props.vpc,
-      version: eks.KubernetesVersion.V1_30,
+      version: eks.KubernetesVersion.V1_35,
       defaultCapacity: 0,
       authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
       albController: {
