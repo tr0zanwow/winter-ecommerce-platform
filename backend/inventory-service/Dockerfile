@@ -1,11 +1,11 @@
 # Stage 1: Dependencies Builder
-FROM node:20-alpine AS dependencies
+FROM node:24-alpine AS dependencies
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
 # Stage 2: TypeScript Compiler
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
@@ -13,7 +13,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Stage 3: Runtime Runner Context
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
