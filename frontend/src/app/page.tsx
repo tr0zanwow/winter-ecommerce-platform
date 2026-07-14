@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import CheckoutButton from './CheckoutButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -192,9 +191,10 @@ export default async function Home() {
                 const isLowStock = product.stockCount > 0 && product.stockCount <= 10;
                 
                 return (
-                  <div 
+                  <Link 
                     key={product.id} 
-                    className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/5 backdrop-blur-sm"
+                    href={`/products/${product.slug}`}
+                    className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/5 backdrop-blur-sm group"
                   >
                     <div>
                       {/* Badge / Status Header */}
@@ -214,10 +214,8 @@ export default async function Home() {
                       </div>
 
                       {/* Title & Description */}
-                      <h3 className="text-lg font-bold text-white tracking-tight leading-snug">
-                        <Link href={`/products/${product.slug}`} className="hover:text-cyan-400 transition-colors">
-                          {product.name}
-                        </Link>
+                      <h3 className="text-lg font-bold text-white tracking-tight leading-snug group-hover:text-cyan-400 transition-colors">
+                        {product.name}
                       </h3>
                       
                       {/* Price Badge */}
@@ -241,12 +239,7 @@ export default async function Home() {
                         </div>
                       )}
                     </div>
-
-                    {/* Simulation Action Button */}
-                    <div className="mt-6">
-                      <CheckoutButton sku={product.sku} price={product.price} />
-                    </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
