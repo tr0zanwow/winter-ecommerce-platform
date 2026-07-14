@@ -47,7 +47,7 @@ const resolvers = {
   Query: {
     products: async () => {
       try {
-        const response = await fetch('http://catalog-service:3000/api/products', {
+        const response = await fetch('http://catalog-service:3000/winter/api/products', {
           cache: 'no-store',
         });
         if (!response.ok) {
@@ -65,7 +65,7 @@ const resolvers = {
     },
     product: async (_: any, { slug }: { slug: string }) => {
       try {
-        const response = await fetch(`http://catalog-service:3000/api/products/slug/${slug}`, {
+        const response = await fetch(`http://catalog-service:3000/winter/api/products/slug/${slug}`, {
           cache: 'no-store',
         });
         if (!response.ok) {
