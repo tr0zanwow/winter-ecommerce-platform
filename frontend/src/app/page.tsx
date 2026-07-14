@@ -188,15 +188,13 @@ export default async function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => {
                 return (
-                  <div 
+                  <Link 
                     key={product.id} 
-                    className="bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition-all duration-200 shadow-lg backdrop-blur-sm group overflow-hidden"
+                    href={`/products/${product.slug}`}
+                    className="bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition-all duration-200 shadow-lg backdrop-blur-sm group overflow-hidden block"
                   >
                     {/* Image Component */}
-                    <Link 
-                      href={`/winter/products/${product.slug}`}
-                      className="w-full aspect-[4/3] bg-slate-950/50 flex items-center justify-center rounded-t-xl border-b border-slate-800/80 overflow-hidden relative block"
-                    >
+                    <div className="w-full aspect-[4/3] bg-slate-950/50 flex items-center justify-center rounded-t-xl border-b border-slate-800/80 overflow-hidden relative block">
                       <img 
                         src={product.imageUrl || "https://loremflickr.com/400/300/winter,apparel"} 
                         alt={product.name}
@@ -205,7 +203,7 @@ export default async function Home() {
                       <div className="absolute bottom-3 left-3 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-semibold text-slate-300 border border-slate-800 uppercase tracking-wider">
                         {product.sku.split('-')[1] || 'APPAREL'}
                       </div>
-                    </Link>
+                    </div>
 
                     {/* Information Layout Block */}
                     <div className="p-5 flex flex-col justify-between flex-1">
@@ -217,9 +215,7 @@ export default async function Home() {
 
                         {/* Product Title */}
                         <h3 className="text-lg font-semibold text-slate-100 line-clamp-2 min-h-[3.5rem] group-hover:text-amber-400 transition-colors duration-200">
-                          <Link href={`/winter/products/${product.slug}`}>
-                            {product.name}
-                          </Link>
+                          {product.name}
                         </h3>
 
                         {/* Retail Pricing Badge */}
@@ -263,7 +259,7 @@ export default async function Home() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
