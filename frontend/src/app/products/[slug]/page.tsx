@@ -259,7 +259,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
           {/* Checkout CTA */}
           <div className="mt-8 pt-6 border-t border-slate-900">
             <Link
-              href="/checkout"
+              href={`/checkout?sku=${product.sku}&name=${encodeURIComponent(product.name)}&price=${product.price}&productId=${product.id}`}
               className="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 group relative overflow-hidden"
             >
               <svg className="w-5 h-5 text-white transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

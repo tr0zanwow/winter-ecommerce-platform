@@ -24,8 +24,8 @@ public class OrderCheckoutAdapter {
         this.orderEventPublisherAdapter = orderEventPublisherAdapter;
     }
 
-    @PostMapping("/test-checkout")
-    public ResponseEntity<CheckoutResponse> testCheckout(@RequestBody CheckoutRequest request) {
+    @PostMapping("/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(@RequestBody CheckoutRequest request) {
         String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
         double totalAmount = request.items().stream()
