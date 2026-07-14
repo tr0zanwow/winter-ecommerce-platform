@@ -53,7 +53,7 @@ jobs:
       - name: Node Environment Setup
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Ingest AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -82,7 +82,7 @@ jobs:
       - name: Node Environment Setup
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Ingest AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -224,7 +224,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'backend/inventory-service/package-lock.json'
 
@@ -305,7 +305,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'backend/payment-service/package-lock.json'
 
