@@ -36,15 +36,9 @@ const typeDefs = `#graphql
     attributes: JSON
   }
 
-  type OrderHealth {
-    status: String!
-    runtimeEngine: String!
-    virtualThreadsActive: Boolean!
-  }
-
   type Query {
     products: [Product]
-    orderHealth: OrderHealth
+    product(slug: String!): Product
   }
 `;
 
@@ -69,22 +63,25 @@ const resolvers = {
         return [];
       }
     },
-    orderHealth: async () => {
+    product: async (_: any, { slug }: { slug: string }) => {
       try {
-        const response = await fetch('http://order-service:8081/api/orders/health', {
+        const response = await fetch(`http://catalog-service:3000/api/products/slug/${slug}`, {
           cache: 'no-store',
         });
         if (!response.ok) {
-          throw new Error(`Failed to fetch order health: ${response.statusText}`);
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error(`Failed to fetch product: ${response.statusText}`);
         }
-        return await response.json();
-      } catch (error) {
-        console.error('Error in GraphQL orderHealth resolver:', error);
+        const data = await response.json();
         return {
-          status: 'OFFLINE',
-          runtimeEngine: 'Java Spring Boot (JVM)',
-          virtualThreadsActive: false,
+          id: data._id || data.id,
+          ...data,
         };
+      } catch (error) {
+        console.error(`Error in GraphQL product resolver for slug ${slug}:`, error);
+        return null;
       }
     },
   },
@@ -104,4 +101,3 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return handler(request);
 }
-

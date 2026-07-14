@@ -127,6 +127,11 @@ jobs:
             exit 1
           fi
 
+      - name: Deploy Monitoring Stack to EKS
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
+          kubectl apply -f infrastructure/k8s-monitoring/loki-stack.yaml
+
   deploy-catalog:
     name: Deploy Catalog Service
     needs: [detect-changes, cdk-deploy]
@@ -238,6 +243,7 @@ jobs:
       - name: Deploy Manifests to EKS & Track Rollout
         run: |
           kubectl apply -f backend/inventory-service/k8s/deployment.yaml
+          kubectl rollout restart deployment/inventory-service-deployment
           kubectl rollout status deployment/inventory-service-deployment --timeout=120s
 
   deploy-frontend:
