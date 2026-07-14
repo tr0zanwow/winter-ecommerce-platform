@@ -186,55 +186,86 @@ export default async function Home() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => {
-                const isOutOfStock = product.stockCount <= 0;
-                const isLowStock = product.stockCount > 0 && product.stockCount <= 10;
-                
                 return (
                   <Link 
                     key={product.id} 
                     href={`/products/${product.slug}`}
-                    className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/5 backdrop-blur-sm group"
+                    className="bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition-all duration-200 shadow-lg backdrop-blur-sm group overflow-hidden"
                   >
-                    <div>
-                      {/* Badge / Status Header */}
-                      <div className="flex justify-between items-start gap-2 mb-4">
-                        <span className="text-[10px] font-mono text-slate-500 tracking-wider">
+                    {/* Image Component */}
+                    <div className="w-full aspect-[4/3] bg-slate-900/50 flex items-center justify-center rounded-t-xl border-b border-slate-800 relative">
+                      <svg className="w-12 h-12 text-slate-700 group-hover:text-amber-400/80 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21m0 0l-.813-5.096M9 21h3m-3.07-17.29a2.25 2.25 0 113.14 3.141L12 7.636l-2.07-2.07a2.25 2.25 0 00-3.14 3.14L8.86 10.78l-.924.924a2.25 2.25 0 000 3.18l.924.924M15 10.25a2.25 2.25 0 113.14 3.14l-2.07 2.07-1.35-1.35" />
+                      </svg>
+                      <div className="absolute bottom-3 left-3 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-semibold text-slate-300 border border-slate-800 uppercase tracking-wider">
+                        {product.sku.split('-')[1] || 'APPAREL'}
+                      </div>
+                    </div>
+
+                    {/* Information Layout Block */}
+                    <div className="p-5 flex flex-col justify-between flex-1">
+                      <div>
+                        {/* SKU indicator */}
+                        <div className="text-[10px] font-mono text-slate-500 tracking-wider mb-2">
                           SKU: {product.sku}
-                        </span>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                          isOutOfStock 
-                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
-                            : isLowStock
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        }`}>
-                          {isOutOfStock ? 'Out of Stock' : `${product.stockCount} Available`}
-                        </span>
+                        </div>
+
+                        {/* Product Title */}
+                        <h3 className="text-lg font-semibold text-slate-100 line-clamp-2 min-h-[3.5rem] group-hover:text-amber-400 transition-colors duration-200">
+                          {product.name}
+                        </h3>
+
+                        {/* Retail Pricing Badge */}
+                        <div className="mt-2 flex items-baseline gap-1">
+                          <span className="text-2xl font-extrabold text-amber-400">
+                            ${product.price.toFixed(2)}
+                          </span>
+                          <span className="text-xs font-semibold text-slate-500 uppercase">USD</span>
+                        </div>
+
+                        {/* Real-time Inventory Counter */}
+                        <div className="mt-3 flex items-center">
+                          {product.stockCount > 30 ? (
+                            <span className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                              In Stock: {product.stockCount} available
+                            </span>
+                          ) : product.stockCount > 0 ? (
+                            <span className="text-xs font-medium text-amber-400 flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                              Only {product.stockCount} left in stock!
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium text-rose-400 flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+                              Out of Stock
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Title & Description */}
-                      <h3 className="text-lg font-bold text-white tracking-tight leading-snug group-hover:text-cyan-400 transition-colors">
-                        {product.name}
-                      </h3>
-                      
-                      {/* Price Badge */}
-                      <div className="mt-3 flex items-baseline">
-                        <span className="text-2xl font-extrabold text-white">
-                          ${product.price.toFixed(2)}
-                        </span>
-                        <span className="text-xs text-slate-500 ml-1.5">USD</span>
-                      </div>
-
-                      {/* Attributes NoSQL Mixed Fields Loop */}
+                      {/* Compact Attributes Preview */}
                       {product.attributes && Object.keys(product.attributes).length > 0 && (
-                        <div className="mt-6 space-y-1.5 pt-4 border-t border-slate-800/50">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold block mb-2">Specifications</span>
-                          {Object.entries(product.attributes).map(([key, val]) => (
-                            <div key={key} className="flex justify-between items-center text-xs py-1 border-b border-slate-800/20">
-                              <span className="text-slate-500 capitalize">{key}:</span>
-                              <span className="text-slate-300 font-semibold">{String(val)}</span>
-                            </div>
-                          ))}
+                        <div className="mt-4 pt-4 border-t border-slate-800/60 flex flex-wrap gap-1.5">
+                          {Object.entries(product.attributes)
+                            .slice(0, 3)
+                            .map(([key, val]) => {
+                              const displayValue = typeof val === 'boolean' 
+                                ? (val ? 'Yes' : 'No') 
+                                : String(val);
+                              
+                              if (displayValue.length > 25) return null;
+                              
+                              return (
+                                <span 
+                                  key={key} 
+                                  className="px-2 py-1 bg-slate-950 border border-slate-800/60 rounded-md text-[10px] text-slate-400 font-medium whitespace-nowrap"
+                                >
+                                  <span className="text-slate-500 font-normal capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span> {displayValue}
+                                </span>
+                              );
+                            })
+                            .filter(Boolean)}
                         </div>
                       )}
                     </div>
