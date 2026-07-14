@@ -7,32 +7,54 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-path: /winter
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
     alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/actions.root-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "Path": "/winter", "StatusCode": "HTTP_301"}}'
 spec:
   rules:
     - host: "projects.pranilrathod.dev"
       http:
         paths:
-          - path: /api/orders
+          - path: /winter/api/orders
             pathType: Prefix
             backend:
               service:
                 name: order-service
                 port:
                   number: 8081
-          - path: /api/products
+          - path: /winter/api/products
             pathType: Prefix
             backend:
               service:
                 name: catalog-service
                 port:
                   number: 3000
-          - path: /
+          - path: /winter/checkout
             pathType: Prefix
             backend:
               service:
                 name: frontend-service
                 port:
                   number: 80
+          - path: /winter/payment
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
+          - path: /winter
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: root-redirect
+                port:
+                  name: use-annotation

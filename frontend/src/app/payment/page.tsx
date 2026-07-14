@@ -41,7 +41,7 @@ function PaymentContent() {
           ],
         };
 
-        const res = await fetch('/api/orders/checkout', {
+        const res = await fetch('/winter/api/orders/checkout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

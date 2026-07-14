@@ -8,9 +8,8 @@ export default async function Home() {
   let products: any[] = [];
   let graphqlError: string | null = null;
   const urls = [
-    'http://127.0.0.1:3000/api/graphql',
-    'https://projects.pranilrathod.dev/winter/api/graphql',
-    'https://projects.pranilrathod.dev/api/graphql'
+    'http://127.0.0.1:3000/winter/api/graphql',
+    'https://projects.pranilrathod.dev/winter/api/graphql'
   ];
 
   try {
