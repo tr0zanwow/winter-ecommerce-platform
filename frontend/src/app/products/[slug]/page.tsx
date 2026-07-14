@@ -67,51 +67,67 @@ export default async function ProductDetailsPage({ params }: PageProps) {
   const { slug } = await params;
   
   // Construct Apollo GraphQL endpoint target path
-  const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-  const host = process.env.VERCEL_URL || 'localhost:3000';
-  const url = `${protocol}://${host}/api/graphql`;
+  const urls = [
+    'http://127.0.0.1:3000/api/graphql',
+    'https://projects.pranilrathod.dev/winter/api/graphql',
+    'https://projects.pranilrathod.dev/api/graphql'
+  ];
 
   let product: ProductDetails | null = null;
   let connectionError = false;
   let diagnosticMessage = '';
 
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `
-          query GetProductDetails($slug: String!) {
-            product(slug: $slug) {
-              id
-              name
-              slug
-              sku
-              price
-              stockCount
-              isActive
-              attributes
-            }
+    let fetched = false;
+    let lastError = null;
+
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: `
+              query GetProductDetails($slug: String!) {
+                product(slug: $slug) {
+                  id
+                  name
+                  slug
+                  sku
+                  price
+                  stockCount
+                  isActive
+                  attributes
+                }
+              }
+            `,
+            variables: { slug }
+          }),
+          next: { revalidate: 0 },
+          signal: AbortSignal.timeout(3000), // 3-second network request limit
+        });
+
+        if (res.ok) {
+          const payload = await res.json();
+          if (payload.errors && payload.errors.length > 0) {
+            throw new Error(payload.errors[0].message);
           }
-        `,
-        variables: { slug }
-      }),
-      next: { revalidate: 0 },
-      signal: AbortSignal.timeout(3000), // 3-second network request limit
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP Error Status: ${res.status}`);
+          product = payload.data?.product || null;
+          fetched = true;
+          break;
+        } else {
+          throw new Error(`BFF HTTP ${res.status}`);
+        }
+      } catch (err: any) {
+        lastError = err;
+      }
     }
 
-    const payload = await res.json();
-    if (payload.errors && payload.errors.length > 0) {
-      throw new Error(payload.errors[0].message);
+    if (!fetched) {
+      throw lastError || new Error("All BFF network pathways unreachable.");
     }
-    
-    product = payload.data?.product || null;
   } catch (error: any) {
     connectionError = true;
     diagnosticMessage = error.message || 'Unknown network error';
