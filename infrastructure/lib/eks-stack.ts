@@ -124,6 +124,20 @@ export class WinterEksStack extends cdk.Stack {
 
     orderEventsTopic.addSubscription(new snsSub.SqsSubscription(inventoryUpdateQueue));
 
+    const paymentProcessingDlq = new sqs.Queue(this, 'WinterPaymentProcessingDlq', {
+      queueName: 'WinterPaymentProcessingDlq',
+    });
+
+    const paymentProcessingQueue = new sqs.Queue(this, 'WinterPaymentProcessingQueue', {
+      queueName: 'WinterPaymentProcessingQueue',
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: paymentProcessingDlq,
+      },
+    });
+
+    orderEventsTopic.addSubscription(new snsSub.SqsSubscription(paymentProcessingQueue));
+
     // STEP 3: Implement Zero-Trust IAM Roles for Service Accounts (IRSA)
     const orderServiceSA = cluster.addServiceAccount('OrderServiceSA', {
       name: 'order-service-sa',
@@ -145,6 +159,18 @@ export class WinterEksStack extends cdk.Stack {
       resources: [
         'arn:aws:sns:us-east-1:880252974759:WinterInventoryUpdateQueue',
         'arn:aws:sqs:us-east-1:880252974759:WinterInventoryUpdateQueue'
+      ]
+    }));
+
+    const paymentServiceSA = cluster.addServiceAccount('PaymentServiceSA', {
+      name: 'payment-service-sa',
+      namespace: 'default'
+    });
+
+    paymentServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:ChangeMessageVisibility'],
+      resources: [
+        paymentProcessingQueue.queueArn
       ]
     }));
   }
