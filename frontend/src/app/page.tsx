@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import CheckoutButton from './CheckoutButton';
 
 export const dynamic = 'force-dynamic';
@@ -292,7 +293,9 @@ export default async function Home() {
 
                       {/* Title & Description */}
                       <h3 className="text-lg font-bold text-white tracking-tight leading-snug">
-                        {product.name}
+                        <Link href={`/products/${product.slug}`} className="hover:text-cyan-400 transition-colors">
+                          {product.name}
+                        </Link>
                       </h3>
                       
                       {/* Price Badge */}

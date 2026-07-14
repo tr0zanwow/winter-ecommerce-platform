@@ -44,6 +44,7 @@ const typeDefs = `#graphql
 
   type Query {
     products: [Product]
+    product(slug: String!): Product
     orderHealth: OrderHealth
   }
 `;
@@ -67,6 +68,27 @@ const resolvers = {
       } catch (error) {
         console.error('Error in GraphQL products resolver:', error);
         return [];
+      }
+    },
+    product: async (_: any, { slug }: { slug: string }) => {
+      try {
+        const response = await fetch(`http://catalog-service:3000/api/products/slug/${slug}`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error(`Failed to fetch product: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return {
+          id: data._id || data.id,
+          ...data,
+        };
+      } catch (error) {
+        console.error(`Error in GraphQL product resolver for slug ${slug}:`, error);
+        return null;
       }
     },
     orderHealth: async () => {

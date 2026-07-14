@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, NotFoundException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -8,6 +8,15 @@ export class ProductsController {
   @Get()
   async findAll() {
     return this.productsService.findAll();
+  }
+
+  @Get('slug/:slug')
+  async findBySlug(@Param('slug') slug: string) {
+    const product = await this.productsService.findBySlug(slug);
+    if (!product) {
+      throw new NotFoundException(`Product with slug '${slug}' not found`);
+    }
+    return product;
   }
 
   @Post()
