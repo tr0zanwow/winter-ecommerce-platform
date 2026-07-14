@@ -74,12 +74,12 @@ export class WinterEksStack extends cdk.Stack {
     });
 
     // Add EC2 Compute Group named FrontendComputeGroup in HA configuration across private subnets
-    // We use t3.micro for Free Tier compliance, but run 5 nodes to have sufficient total memory (5GB) and pod slots
+    // We use t3.micro for Free Tier compliance, but run 9 nodes to have sufficient total memory (9GB) and pod slots for loki/promtail monitoring
     cluster.addNodegroupCapacity('FrontendComputeGroup', {
       instanceTypes: [new ec2.InstanceType('t3.micro')],
-      minSize: 5,
-      maxSize: 6,
-      desiredSize: 5,
+      minSize: 9,
+      maxSize: 10,
+      desiredSize: 9,
       diskSize: 30,
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
     });
