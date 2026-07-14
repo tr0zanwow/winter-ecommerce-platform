@@ -15,7 +15,7 @@ export default function CheckoutButton({ sku, price }: CheckoutButtonProps) {
     setStatus('loading');
     setMessage('');
     try {
-      const res = await fetch('/api/orders/test-checkout', {
+      const res = await fetch('/api/orders/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
