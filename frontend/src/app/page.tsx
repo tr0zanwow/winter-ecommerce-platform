@@ -244,7 +244,7 @@ export default async function Home() {
 
                     {/* Simulation Action Button */}
                     <div className="mt-6">
-                      <CheckoutButton sku={product.sku} />
+                      <CheckoutButton sku={product.sku} price={product.price} />
                     </div>
                   </div>
                 );

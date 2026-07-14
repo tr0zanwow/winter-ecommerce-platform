@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 
 interface CheckoutButtonProps {
   sku: string;
+  price: number;
 }
 
-export default function CheckoutButton({ sku }: CheckoutButtonProps) {
+export default function CheckoutButton({ sku, price }: CheckoutButtonProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string>('');
 
@@ -21,7 +22,7 @@ export default function CheckoutButton({ sku }: CheckoutButtonProps) {
         },
         body: JSON.stringify({
           customerId: 'CST-9943',
-          items: [{ sku, quantity: 1 }],
+          items: [{ sku, quantity: 1, price }],
         }),
       });
 
