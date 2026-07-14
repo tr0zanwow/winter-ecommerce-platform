@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service-deployment
+  namespace: default
+  labels:
+    app: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      serviceAccountName: payment-service-sa
+      containers:
+      - name: payment-service
+        image: 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-payment-service:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "48Mi"
+          limits:
+            cpu: "30m"
+            memory: "96Mi"

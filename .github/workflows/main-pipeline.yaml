@@ -18,6 +18,7 @@ jobs:
       inventory: ${{ steps.filter.outputs.inventory }}
       order: ${{ steps.filter.outputs.order }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      payment: ${{ steps.filter.outputs.payment }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -37,6 +38,8 @@ jobs:
               - 'backend/order-service/**'
             frontend:
               - 'frontend/**'
+            payment:
+              - 'backend/payment-service/**'
 
   cdk-diff:
     name: CDK Diff (PR)
@@ -279,3 +282,51 @@ jobs:
           kubectl apply -f frontend/k8s/deployment.yaml
           kubectl apply -f frontend/k8s/ingress.yaml
           kubectl rollout restart deployment/frontend-deployment
+
+  deploy-payment:
+    name: Deploy Payment Service
+    needs: [detect-changes, cdk-deploy]
+    if: always() && github.event_name == 'push' && needs.detect-changes.outputs.payment == 'true' && (needs.cdk-deploy.result == 'success' || needs.cdk-deploy.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'backend/payment-service/package-lock.json'
+
+      - name: Cache dependencies and run compile check
+        run: |
+          cd backend/payment-service
+          npm ci
+          npm run build
+
+      - name: Build, Tag, and Push Docker Image
+        run: |
+          docker build -t 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-payment-service:latest ./backend/payment-service
+          docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-payment-service:latest
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
+
+      - name: Deploy Manifests to EKS & Track Rollout
+        run: |
+          kubectl apply -f backend/payment-service/k8s/deployment.yaml
+          kubectl rollout restart deployment/payment-service-deployment
+          kubectl rollout status deployment/payment-service-deployment --timeout=120s
+
