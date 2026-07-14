@@ -18,7 +18,7 @@ const products = [
     price: 189,
     stockCount: 75,
     isActive: true,
-    imageUrl: "https://loremflickr.com/640/480/sweater,apparel?lock=1",
+    imageUrl: "https://loremflickr.com/400/300/cashmere,sweater",
     attributes: {
       material: "100% Mongolian Cashmere",
       ply: "2-ply",
@@ -34,7 +34,7 @@ const products = [
     price: 145,
     stockCount: 120,
     isActive: true,
-    imageUrl: "https://loremflickr.com/640/480/jacket,apparel?lock=2",
+    imageUrl: "https://loremflickr.com/400/300/fleece,jacket",
     attributes: {
       material: "Recycled Polyester Fleece",
       weatherResistance: "Wind-resistant panels",
@@ -50,7 +50,7 @@ const products = [
     price: 89,
     stockCount: 200,
     isActive: true,
-    imageUrl: "https://loremflickr.com/640/480/thermal,undershirt?lock=3",
+    imageUrl: "https://loremflickr.com/400/300/thermal,apparel",
     attributes: {
       material: "100% Superfine Merino Wool",
       micronCount: "18.5 micron",
@@ -67,7 +67,7 @@ const products = [
     price: 249,
     stockCount: 45,
     isActive: true,
-    imageUrl: "https://loremflickr.com/640/480/ski,bib?lock=4",
+    imageUrl: "https://loremflickr.com/400/300/ski,bib,pants",
     attributes: {
       waterproofRating: "20k",
       breathability: "15k",
@@ -83,7 +83,7 @@ const products = [
     price: 389,
     stockCount: 25,
     isActive: true,
-    imageUrl: "https://loremflickr.com/640/480/parka,coat?lock=5",
+    imageUrl: "https://loremflickr.com/400/300/arctic,parka",
     attributes: {
       downFillPower: 800,
       hoodFur: "Synthetic",
@@ -98,12 +98,72 @@ const products = [
     price: 45,
     stockCount: 120,
     isActive: true,
-    imageUrl: "https://loremflickr.com/640/480/balaclava,mask?lock=6",
+    imageUrl: "https://loremflickr.com/400/300/balaclava,mask",
     attributes: {
       material: "100% Merino Wool",
       weight: "300gsm",
       knitType: "Interlock",
       odorResistant: true
+    }
+  },
+  {
+    name: "Winter Parka Coat",
+    slug: "winter-parka-coat",
+    sku: "WNT-PRK-COT07",
+    price: 320,
+    stockCount: 15,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/400/300/winter,parka,coat",
+    attributes: {
+      material: "Polyester shell, Down fill",
+      waterproof: true,
+      layers: 3,
+      temperatureRating: "-20°C"
+    }
+  },
+  {
+    name: "Glacier Expedition Gloves",
+    slug: "glacier-expedition-gloves",
+    sku: "WNT-GLC-GLV08",
+    price: 79,
+    stockCount: 45,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/400/300/glacier,gloves,winter",
+    attributes: {
+      insulation: "Thinsulate",
+      touchScreenCompatible: true,
+      waterproof: true,
+      material: "Goatskin leather & nylon"
+    }
+  },
+  {
+    name: "Vortex Thermal Goggles",
+    slug: "vortex-thermal-goggles",
+    sku: "WNT-VTX-GGL09",
+    price: 129,
+    stockCount: 22,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/400/300/ski,goggles,snow",
+    attributes: {
+      lensType: "Dual-pane cylindrical",
+      antiFog: true,
+      uvProtection: "UV400",
+      frameSize: "Medium/Large"
+    }
+  },
+  {
+    name: "Summit Gore-Tex Snow Boots",
+    slug: "summit-gore-tex-snow-boots",
+    sku: "WNT-SMT-BTS10",
+    price: 215,
+    stockCount: 35,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/400/300/snow,boots,winter",
+    attributes: {
+      membrane: "Gore-Tex",
+      insulation: "400g PrimaLoft",
+      soleType: "Vibram Arctic Grip",
+      closure: "Lace-up"
     }
   }
 ];
@@ -118,6 +178,9 @@ async function main() {
 
     const db = client.db(); // uses db name from connection string (or defaults)
     const collection = db.collection('products');
+
+    console.log('Clearing existing products to prevent index conflicts...');
+    await collection.deleteMany({});
 
     console.log(`Starting idempotent database upsert operations in collection "${collection.collectionName}"...`);
 
