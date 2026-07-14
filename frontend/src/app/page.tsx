@@ -4,69 +4,7 @@ import CheckoutButton from './CheckoutButton';
 
 export const dynamic = 'force-dynamic';
 
-interface HealthResponse {
-  status: string;
-  message: string;
-}
-
-// React Server Component that fetches EKS backend health
-async function getServiceHealth(url: string, serviceName: string): Promise<HealthResponse> {
-  try {
-    const res = await fetch(url, {
-      next: { revalidate: 0 },
-      signal: AbortSignal.timeout(2000), // 2-second connection timeout
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    
-    let messageText = data.message;
-    if (!messageText && data.runtimeEngine && data.virtualThreadsActive) {
-      messageText = `Runtime Engine: ${data.runtimeEngine} | Virtual Threads Active: ${data.virtualThreadsActive}`;
-    }
-    if (!messageText) {
-      messageText = `Connected to ${serviceName} successfully.`;
-    }
-    
-    return {
-      status: data.status || "UNKNOWN",
-      message: messageText
-    };
-  } catch (error: any) {
-    return {
-      status: "OFFLINE",
-      message: `Unavailable from outside the EKS cluster mesh (${error.message || 'Timeout'})`
-    };
-  }
-}
-
 export default async function Home() {
-  // Fetch EKS service health
-  const orderServiceHealth = await getServiceHealth(
-    'https://projects.pranilrathod.dev/winter/api/orders/health',
-    'Order Service'
-  );
-  const paymentServiceHealth = await getServiceHealth(
-    'https://projects.pranilrathod.dev/winter/api/payments/health',
-    'Mock Payment Service'
-  );
-  const inventoryServiceHealth = await getServiceHealth(
-    'https://projects.pranilrathod.dev/winter/api/inventory/health',
-    'Inventory Service'
-  );
-  const catalogServiceHealth = await getServiceHealth(
-    'https://projects.pranilrathod.dev/winter/api/products/health',
-    'Catalog Service'
-  );
-
-  const services = [
-    { name: "Order Service", endpoint: "order-service", port: 8081, data: orderServiceHealth },
-    { name: "Payment Service", endpoint: "payment-service", port: 8080, data: paymentServiceHealth },
-    { name: "Inventory Service", endpoint: "inventory-service", port: 8080, data: inventoryServiceHealth },
-    { name: "Catalog Service", endpoint: "catalog-service", port: 3000, data: catalogServiceHealth },
-  ];
-
   // Fetch dynamic products catalog data from Apollo GraphQL BFF gateway
   let products: any[] = [];
   let graphqlError: string | null = null;
@@ -89,7 +27,7 @@ export default async function Home() {
           },
           body: JSON.stringify({
             query: `
-              query GetCatalogAndSystemState {
+              query GetCatalog {
                 products {
                   id
                   name
@@ -110,7 +48,6 @@ export default async function Home() {
           const json = await res.json();
           if (json.data && json.data.products) {
             products = json.data.products;
-            // Filter out inactive products if any, or just keep products that returned
             fetched = true;
             break;
           } else if (json.errors) {
@@ -143,12 +80,6 @@ export default async function Home() {
             Winter E-commerce <span className="text-cyan-400 font-normal">Platform</span>
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`inline-block w-2.5 h-2.5 rounded-full animate-pulse ${graphqlError ? 'bg-rose-500 shadow-lg shadow-rose-500/50' : 'bg-emerald-500 shadow-lg shadow-emerald-500/50'}`} />
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            {graphqlError ? 'Mesh Disconnected' : 'BFF Gateway Active'}
-          </span>
-        </div>
       </div>
     </header>
   );
@@ -156,7 +87,7 @@ export default async function Home() {
   // Common Footer component
   const renderFooter = () => (
     <footer className="border-t border-slate-900/60 py-6 text-center text-xs text-slate-500 bg-slate-950/30">
-      <p>© 2026 Winter E-commerce Platform. Designed for Project Loom, virtual thread scalability, and AWS EKS cloud deployments.</p>
+      <p>© 2026 Winter E-commerce Platform. Designed for scalability and AWS EKS cloud deployments.</p>
     </footer>
   );
 
@@ -209,14 +140,6 @@ export default async function Home() {
                 <span className="text-rose-400 overflow-x-auto whitespace-pre-wrap">{graphqlError}</span>
               </div>
             </div>
-            <div className="mt-6 flex flex-col gap-2">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Troubleshooting Steps:</span>
-              <ul className="text-xs text-slate-500 list-disc list-inside space-y-1.5 leading-relaxed">
-                <li>Check if the MongoDB atlas / cloud cluster credentials are configured.</li>
-                <li>Verify EKS cluster node capacity limits or VPC private subnet security groups.</li>
-                <li>Ensure the internal <code className="bg-slate-950 px-1 py-0.5 rounded text-slate-400">catalog-service</code> is running in the namespace.</li>
-              </ul>
-            </div>
           </div>
         </div>
 
@@ -225,7 +148,7 @@ export default async function Home() {
     );
   }
 
-  // HEALTHY VIEW: Render normal product catalog alongside sidebar
+  // HEALTHY VIEW: Render normal product catalog
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans relative selection:bg-cyan-500 selection:text-slate-900">
       {/* Background Decorative Gradients */}
@@ -236,10 +159,9 @@ export default async function Home() {
 
       {renderHeader()}
 
-      <div className="max-w-7xl w-full mx-auto px-6 py-12 flex-1 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
+      <div className="max-w-7xl w-full mx-auto px-6 py-12 flex-1 flex flex-col">
         {/* Main Section: Hero & Catalog Grid */}
-        <section className="lg:col-span-3 flex flex-col">
+        <section className="w-full flex flex-col">
           <div className="mb-12">
             <span className="text-cyan-400 font-semibold tracking-wider text-xs uppercase bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
               WINTER CORE ECOSYSTEM
@@ -264,7 +186,7 @@ export default async function Home() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => {
                 const isOutOfStock = product.stockCount <= 0;
                 const isLowStock = product.stockCount > 0 && product.stockCount <= 10;
@@ -330,60 +252,6 @@ export default async function Home() {
             </div>
           )}
         </section>
-
-        {/* Sidebar Panel: Streamlined cluster health monitoring drawer */}
-        <aside className="lg:col-span-1 border-l lg:border-l border-slate-800/50 lg:pl-8 flex flex-col gap-6">
-          <div className="pb-4 border-b border-slate-800/50">
-            <h3 className="text-white font-bold text-lg tracking-tight">System Monitor</h3>
-            <p className="text-xs text-slate-500 mt-1">EKS cluster mesh service-level statuses.</p>
-          </div>
-
-          <div className="space-y-4">
-            {services.map((service, index) => {
-              const isOnline = service.data.status === "UP" || service.data.status === "ONLINE";
-              const isOffline = service.data.status === "OFFLINE";
-              
-              return (
-                <div 
-                  key={index} 
-                  className="bg-slate-900/30 border border-slate-850 rounded-xl p-4 flex flex-col justify-between backdrop-blur-sm hover:border-slate-800/80 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-white">{service.name}</span>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                      isOnline 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                        : isOffline
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                    }`}>
-                      <span className={`w-1 h-1 rounded-full ${
-                        isOnline ? 'bg-emerald-400 animate-ping' : isOffline ? 'bg-amber-400' : 'bg-rose-400'
-                      }`} />
-                      {service.data.status}
-                    </span>
-                  </div>
-                  
-                  <div className="mt-3 bg-slate-950/50 rounded-lg p-2.5 border border-slate-900">
-                    <span className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold block mb-1">Payload Trace</span>
-                    <p className="text-[10px] font-mono text-slate-400 leading-normal line-clamp-3 overflow-ellipsis whitespace-normal" title={service.data.message}>
-                      {service.data.message}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Virtual Network Info */}
-          <div className="bg-gradient-to-r from-indigo-500/5 to-cyan-500/5 border border-indigo-500/10 rounded-xl p-4 text-xs">
-            <span className="text-indigo-400 font-bold block mb-1">Topology Notice</span>
-            <p className="text-slate-400 leading-relaxed">
-              Services connect via internal CoreDNS resolution. Public requests loop back through secure Cloudflare gateway paths.
-            </p>
-          </div>
-        </aside>
-
       </div>
 
       {renderFooter()}
