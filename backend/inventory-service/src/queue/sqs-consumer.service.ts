@@ -51,7 +51,7 @@ export class SqsConsumerService implements OnModuleInit {
 
                   this.logger.log(`Dispatching stock decrement to catalog service: ${JSON.stringify(decrementPayload)}`);
 
-                  const response = await fetch('http://catalog-service:3000/api/products/decrement-stock', {
+                  const response = await fetch('http://catalog-service:3000/winter/api/products/decrement-stock', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(decrementPayload),

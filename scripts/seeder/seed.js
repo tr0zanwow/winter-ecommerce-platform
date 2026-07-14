@@ -59,6 +59,52 @@ const products = [
       type: "thermal",
       seamType: "Flatlock anti-chafing"
     }
+  },
+  {
+    name: "Alpine Technical Ski Bib",
+    slug: "alpine-technical-ski-bib",
+    sku: "WNT-SKI-BIB04",
+    price: 249,
+    stockCount: 45,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/640/480/ski,bib?lock=4",
+    attributes: {
+      waterproofRating: "20k",
+      breathability: "15k",
+      insulation: "Thinsulate 80g",
+      pockets: 4,
+      reccoReflector: true
+    }
+  },
+  {
+    name: "Arctic Explorer Parka",
+    slug: "arctic-explorer-parka",
+    sku: "WNT-ARC-PRK05",
+    price: 389,
+    stockCount: 25,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/640/480/parka,coat?lock=5",
+    attributes: {
+      downFillPower: 800,
+      hoodFur: "Synthetic",
+      temperatureRating: "-30°C",
+      outerShell: "DWR Treated Canvas"
+    }
+  },
+  {
+    name: "Summit Merino Balaclava",
+    slug: "summit-merino-balaclava",
+    sku: "WNT-MRN-BLV06",
+    price: 45,
+    stockCount: 120,
+    isActive: true,
+    imageUrl: "https://loremflickr.com/640/480/balaclava,mask?lock=6",
+    attributes: {
+      material: "100% Merino Wool",
+      weight: "300gsm",
+      knitType: "Interlock",
+      odorResistant: true
+    }
   }
 ];
 

@@ -74,12 +74,12 @@ export class WinterEksStack extends cdk.Stack {
     });
 
     // Add EC2 Compute Group named FrontendComputeGroup in HA configuration across private subnets
-    // We use t3.micro for Free Tier compliance, but run 5 nodes to have sufficient total memory (5GB) and pod slots
+    // We use t3.micro for Free Tier compliance, but run 9 nodes to have sufficient total memory (9GB) and pod slots for loki/promtail monitoring
     cluster.addNodegroupCapacity('FrontendComputeGroup', {
       instanceTypes: [new ec2.InstanceType('t3.micro')],
-      minSize: 5,
-      maxSize: 6,
-      desiredSize: 5,
+      minSize: 9,
+      maxSize: 10,
+      desiredSize: 9,
       diskSize: 30,
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
     });
@@ -124,6 +124,20 @@ export class WinterEksStack extends cdk.Stack {
 
     orderEventsTopic.addSubscription(new snsSub.SqsSubscription(inventoryUpdateQueue));
 
+    const paymentProcessingDlq = new sqs.Queue(this, 'WinterPaymentProcessingDlq', {
+      queueName: 'WinterPaymentProcessingDlq',
+    });
+
+    const paymentProcessingQueue = new sqs.Queue(this, 'WinterPaymentProcessingQueue', {
+      queueName: 'WinterPaymentProcessingQueue',
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: paymentProcessingDlq,
+      },
+    });
+
+    orderEventsTopic.addSubscription(new snsSub.SqsSubscription(paymentProcessingQueue));
+
     // STEP 3: Implement Zero-Trust IAM Roles for Service Accounts (IRSA)
     const orderServiceSA = cluster.addServiceAccount('OrderServiceSA', {
       name: 'order-service-sa',
@@ -145,6 +159,18 @@ export class WinterEksStack extends cdk.Stack {
       resources: [
         'arn:aws:sns:us-east-1:880252974759:WinterInventoryUpdateQueue',
         'arn:aws:sqs:us-east-1:880252974759:WinterInventoryUpdateQueue'
+      ]
+    }));
+
+    const paymentServiceSA = cluster.addServiceAccount('PaymentServiceSA', {
+      name: 'payment-service-sa',
+      namespace: 'default'
+    });
+
+    paymentServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:ChangeMessageVisibility'],
+      resources: [
+        paymentProcessingQueue.queueArn
       ]
     }));
   }
