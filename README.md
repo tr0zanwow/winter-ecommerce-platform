@@ -17,16 +17,14 @@
     <strong>👉 Live Production Gateway Link:</strong> 
     <a href="https://projects.pranilrathod.dev/winter" target="_blank">projects.pranilrathod.dev/winter</a>
   </div>
-
-  <div style="background-color: #f0f7ff; border-left: 5px solid #0056b3; padding: 18px; margin: 20px 0; border-radius: 6px; text-align: left; max-width: 900px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-    <strong style="color: #0056b3; font-size: 1.15em;">🚀 Key Engineering Highlights &amp; Metrics (KPIs)</strong>
-    <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #2d3748;">
-      <li>⚡ <strong>Main Branch CD Speed:</strong> Any push to <code>main</code> is automatically built, verified, and deployed to EKS within <strong>2 minutes</strong>.</li>
-      <li>🔧 <strong>Infra Provisioning SLA:</strong> Complete infrastructure setup/teardown via the AWS CDK pipeline is fully completed in <strong>20 minutes</strong>.</li>
-      <li>🌐 <strong>Zero-Touch Edge Routing:</strong> DNS CNAME records and Cloudflare proxy mappings targeting <code>projects.pranilrathod.dev/winter</code> are 100% automated (no manual work).</li>
-    </ul>
-  </div>
 </div>
+
+> [!TIP]
+> ### 🚀 Key Engineering Highlights & Metrics (KPIs)
+> - ⚡ **Main Branch CD Speed:** Any push to `main` is automatically built, verified, and deployed to EKS within **2 minutes**.
+> - 🔧 **Infra Provisioning SLA:** Complete infrastructure setup/teardown via the AWS CDK pipeline is fully completed in **20 minutes**.
+> - 🌐 **Zero-Touch Edge Routing:** DNS CNAME records and Cloudflare proxy mappings targeting `projects.pranilrathod.dev/winter` are 100% automated (no manual work).
+
 
 <hr />
 
