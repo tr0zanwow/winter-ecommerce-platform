@@ -1,7 +1,8 @@
-import React from 'react';
-import Link from 'next/link';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import React, { useState, useEffect, use } from 'react';
+import Link from 'next/link';
+import { useCart } from '../../context/CartStore';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -19,41 +20,35 @@ interface ProductDetails {
   attributes?: Record<string, any>;
 }
 
-// Inline connectivity/not-found error layout mimicking page.tsx premium aesthetics
+// Inline connectivity/not-found error layout mimicking premium light theme aesthetics
 function ErrorStateView({ title, message, slug }: { title: string; message: string; slug?: string }) {
   return (
-    <main className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-      {/* Decorative Grid Overlays */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.15]" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <main className="min-h-screen bg-slate-50 text-slate-800 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-md w-full text-center space-y-8 bg-slate-950/60 border border-slate-900 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
+      <div className="relative z-10 max-w-md w-full text-center space-y-8 bg-white border border-slate-200 rounded-3xl p-8 shadow-lg">
         <div className="flex justify-center">
-          <div className="w-20 h-20 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 relative">
+          <div className="w-20 h-20 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 relative">
             <svg className="w-10 h-10 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
             </svg>
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500"></span>
-            </span>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-2xl font-bold tracking-tight text-white">{title}</h2>
-          <p className="text-sm text-slate-400 leading-relaxed">{message}</p>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">{title}</h2>
+          <p className="text-sm text-slate-650 leading-relaxed">{message}</p>
           {slug && (
-            <div className="mt-2 text-xs bg-slate-900/80 text-rose-400 border border-rose-500/10 py-1.5 px-3 rounded-lg inline-block font-mono">
+            <div className="mt-2 text-xs bg-slate-50 text-rose-600 border border-rose-100 py-1.5 px-3 rounded-lg inline-block font-mono">
               Parameter Query Slug: {slug}
             </div>
           )}
         </div>
 
-        <div className="pt-4 border-t border-slate-900 flex flex-col gap-3">
+        <div className="pt-4 border-t border-slate-100">
           <Link
             href="/"
-            className="w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg transition duration-200 block text-center"
+            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow transition duration-150 block text-center"
           >
             Return to Core Catalog
           </Link>
@@ -63,77 +58,137 @@ function ErrorStateView({ title, message, slug }: { title: string; message: stri
   );
 }
 
-export default async function ProductDetailsPage({ params }: PageProps) {
-  const { slug } = await params;
-  
-  // Construct Apollo GraphQL endpoint target path
-  const urls = [
-    'http://127.0.0.1:3000/winter/api/graphql',
-    'https://projects.pranilrathod.dev/winter/api/graphql'
-  ];
+export default function ProductDetailsPage({ params }: PageProps) {
+  const { slug } = use(params);
 
-  let product: ProductDetails | null = null;
-  let connectionError = false;
-  let diagnosticMessage = '';
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [connectionError, setConnectionError] = useState<boolean>(false);
+  const [diagnosticMessage, setDiagnosticMessage] = useState<string>('');
+  const [addedFeedback, setAddedFeedback] = useState<boolean>(false);
 
-  try {
-    let fetched = false;
-    let lastError = null;
+  const { cartItems, addToCart } = useCart();
+  const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: `
-              query GetProductDetails($slug: String!) {
-                product(slug: $slug) {
-                  id
-                  name
-                  slug
-                  sku
-                  price
-                  stockCount
-                  isActive
-                  imageUrl
-                  attributes
+  const fetchProduct = async () => {
+    setLoading(true);
+    try {
+      const urls = [
+        '/winter/api/graphql',
+        'http://127.0.0.1:3000/winter/api/graphql'
+      ];
+      let fetched = false;
+      let lastError = null;
+
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: `
+                query GetProductDetails($slug: String!) {
+                  product(slug: $slug) {
+                    id
+                    name
+                    slug
+                    sku
+                    price
+                    stockCount
+                    isActive
+                    imageUrl
+                    attributes
+                  }
                 }
-              }
-            `,
-            variables: { slug }
-          }),
-          next: { revalidate: 0 },
-          signal: AbortSignal.timeout(3000), // 3-second network request limit
-        });
+              `,
+              variables: { slug }
+            })
+          });
 
-        if (res.ok) {
-          const payload = await res.json();
-          if (payload.errors && payload.errors.length > 0) {
-            throw new Error(payload.errors[0].message);
+          if (res.ok) {
+            const payload = await res.json();
+            if (payload.errors && payload.errors.length > 0) {
+              throw new Error(payload.errors[0].message);
+            }
+            if (payload.data?.product) {
+              setProduct(payload.data.product);
+              fetched = true;
+              break;
+            }
           }
-          product = payload.data?.product || null;
-          fetched = true;
-          break;
-        } else {
-          throw new Error(`BFF HTTP ${res.status}`);
+        } catch (err: any) {
+          lastError = err;
         }
-      } catch (err: any) {
-        lastError = err;
       }
-    }
 
-    if (!fetched) {
-      throw lastError || new Error("All BFF network pathways unreachable.");
+      if (!fetched) {
+        throw lastError || new Error("All BFF network pathways unreachable.");
+      }
+    } catch (error: any) {
+      setConnectionError(true);
+      setDiagnosticMessage(error.message || 'Unknown network error');
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    connectionError = true;
-    diagnosticMessage = error.message || 'Unknown network error';
-  }
+  };
 
-  // 1. Connectivity Lost state
+  useEffect(() => {
+    fetchProduct();
+  }, [slug]);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addToCart({
+      productId: product.id,
+      sku: product.sku,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl || '',
+      quantity: 1,
+      stockCount: product.stockCount
+    });
+    setAddedFeedback(true);
+    setTimeout(() => {
+      setAddedFeedback(false);
+    }, 1500);
+  };
+
+  // Header component aligned to light theme
+  const renderHeader = () => (
+    <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center font-bold text-white shadow-md shadow-indigo-600/10 group-hover:scale-105 transition duration-150">
+            W
+          </div>
+          <span className="font-bold text-lg tracking-tight text-slate-800">
+            Winter E-commerce <span className="text-indigo-600 font-normal">Platform</span>
+          </span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/orders" className="text-sm font-semibold text-slate-650 hover:text-indigo-600 transition duration-155 flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl hover:bg-slate-100">
+            <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>Orders</span>
+          </Link>
+
+          <Link href="/cart" className="text-sm font-semibold text-slate-655 hover:text-indigo-650 transition duration-155 flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl hover:bg-slate-100 relative">
+            <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span>Cart</span>
+            {totalCartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-extrabold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-scaleIn">
+                {totalCartCount}
+              </span>
+            )}
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+
   if (connectionError) {
     return (
       <ErrorStateView
@@ -144,78 +199,55 @@ export default async function ProductDetailsPage({ params }: PageProps) {
     );
   }
 
-  // 2. Product Not Found state
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between font-sans">
+        {renderHeader()}
+        <div className="flex-1 flex flex-col items-center justify-center py-24 space-y-4">
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin" />
+          <span className="text-xs text-slate-500 font-mono">Loading product profile...</span>
+        </div>
+      </main>
+    );
+  }
+
   if (!product) {
     return (
       <ErrorStateView
         title="Product Profile Unresolved"
-        message="The requested SKU details slug cannot be matched with an active entry inside our NoSQL database. Verify routing parameters."
+        message="The requested SKU details slug cannot be matched with an active entry inside our database. Verify routing parameters."
         slug={slug}
       />
     );
   }
 
-  // Determine stock color indicators
   const isOutOfStock = product.stockCount <= 0;
   const isLowStock = product.stockCount > 0 && product.stockCount <= 5;
 
   return (
-    <main className="min-h-screen bg-[#07090e] text-slate-100 relative overflow-hidden font-sans pb-24">
-      {/* Decorative Background Mesh elements */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#121824_1px,transparent_1px),linear-gradient(to_bottom,#121824_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.25]" />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[160px] pointer-events-none" />
+    <main className="min-h-screen bg-slate-50 text-slate-800 relative overflow-hidden font-sans pb-24">
+      {renderHeader()}
 
-      {/* Navigation Header */}
-      <header className="relative z-10 border-b border-slate-900 bg-slate-950/20 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition duration-150">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Core catalog
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/orders" className="text-sm font-semibold text-slate-400 hover:text-white transition duration-150 flex items-center gap-1.5 bg-slate-900/50 border border-slate-850 px-3.5 py-1.5 rounded-xl hover:bg-slate-900 hover:border-slate-700">
-              <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span>Orders</span>
-            </Link>
-            <div className="text-slate-500 text-xs font-mono">
-              GATEWAY PATH: /products/{product.slug}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Luxury Split Panel Layout */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12">
-        
-        {/* Left Column: Premium Product Image */}
-        <section className="bg-slate-900/30 border border-slate-800/80 rounded-3xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:h-[540px] flex flex-col justify-center relative group shadow-2xl backdrop-blur-sm">
+        {/* Left Column: Product Image */}
+        <section className="bg-white border border-slate-200 rounded-3xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:h-[540px] flex flex-col justify-center relative group shadow-sm">
           {product.imageUrl ? (
             <img 
               src={product.imageUrl} 
               alt={product.name} 
-              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+              className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-500"
             />
           ) : (
             <div className="p-8 h-full flex flex-col justify-between">
-              {/* Subtle patterns */}
-              <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-              
-              <div className="self-end bg-slate-950/40 border border-slate-800/40 px-3 py-1.5 rounded-lg backdrop-blur-md relative z-10">
-                <span className="text-[10px] text-slate-400 font-mono">ASSET STATE: PLACEHOLDER_VECTOR</span>
+              <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
+              <div className="self-end bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg relative z-10">
+                <span className="text-[10px] text-slate-550 font-mono font-bold">ASSET STATE: PLACEHOLDER_VECTOR</span>
               </div>
-
               <div className="flex flex-col items-center justify-center flex-1 py-12 relative z-10">
-                <span className="text-8xl font-black text-slate-800/40 select-none font-mono">W</span>
+                <span className="text-8xl font-black text-slate-200 select-none font-mono">W</span>
                 <p className="text-xs text-slate-500 mt-4 tracking-wider uppercase font-semibold">Image Asset Vector Pending</p>
               </div>
-
-              <div className="relative z-10 flex justify-between items-center text-xs text-slate-400 border-t border-slate-900/60 pt-4">
+              <div className="relative z-10 flex justify-between items-center text-xs text-slate-400 border-t border-slate-100 pt-4">
                 <span>MODEL SCALE: 1.0</span>
                 <span>FORMAT: NO_SQL_SPECS</span>
               </div>
@@ -224,23 +256,22 @@ export default async function ProductDetailsPage({ params }: PageProps) {
         </section>
 
         {/* Right Column: Metadata & Core Details */}
-        <section className="flex flex-col justify-between bg-slate-950/40 border border-slate-900 rounded-3xl p-8 backdrop-blur-sm shadow-xl">
+        <section className="flex flex-col justify-between bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
           <div className="space-y-6">
-            
             {/* Catalog Badges */}
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-xs font-semibold tracking-wider text-cyan-400 uppercase bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+              <span className="text-xs font-bold tracking-wider text-indigo-650 uppercase bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
                 WINTER CORE CATALOG
               </span>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
                 isOutOfStock
-                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                  ? 'bg-rose-50 text-rose-600 border-rose-150'
                   : isLowStock
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  ? 'bg-amber-50 text-amber-600 border-amber-150'
+                  : 'bg-emerald-50 text-emerald-600 border-emerald-150'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${
-                  isOutOfStock ? 'bg-rose-400' : isLowStock ? 'bg-amber-400' : 'bg-emerald-400'
+                  isOutOfStock ? 'bg-rose-500' : isLowStock ? 'bg-amber-500' : 'bg-emerald-500'
                 }`} />
                 {isOutOfStock ? 'Out of Stock' : isLowStock ? `Low Stock (${product.stockCount})` : 'Active / In Stock'}
               </span>
@@ -248,31 +279,31 @@ export default async function ProductDetailsPage({ params }: PageProps) {
 
             {/* Title, SKU and Price */}
             <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-extrabold text-slate-900 leading-tight">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-450">
                 <span>SKU NUMBER:</span>
-                <span className="text-slate-400 font-semibold">{product.sku}</span>
+                <span className="text-slate-700 font-bold">{product.sku}</span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-900">
-              <p className="text-sm text-slate-500 font-mono">ACQUISITION PRICE</p>
+            <div className="pt-4 border-t border-slate-100">
+              <p className="text-xs text-slate-400 font-mono uppercase tracking-wider">ACQUISITION PRICE</p>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-4xl font-extrabold text-white tracking-tight">
+                <span className="text-4xl font-extrabold text-slate-900 tracking-tight">
                   ${product.price.toFixed(2)}
                 </span>
-                <span className="text-xs text-slate-400 font-mono">USD</span>
+                <span className="text-xs text-slate-500 font-mono">USD</span>
               </div>
             </div>
 
-            {/* Unstructured attributes specs grid */}
+            {/* Specifications Grid */}
             {product.attributes && Object.keys(product.attributes).length > 0 ? (
-              <div className="pt-6 border-t border-slate-900 space-y-4">
+              <div className="pt-6 border-t border-slate-100 space-y-4">
                 <div>
-                  <h3 className="text-xs text-slate-500 uppercase tracking-widest font-bold">Product Specifications</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Garment details and thermal attributes</p>
+                  <h3 className="text-xs text-slate-755 uppercase tracking-widest font-bold">Product Specifications</h3>
+                  <p className="text-[11px] text-slate-450 mt-0.5">Garment details and thermal attributes</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {Object.entries(product.attributes).map(([key, val]) => {
@@ -284,34 +315,66 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                     }[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                     
                     return (
-                      <div key={key} className="flex justify-between items-center bg-slate-900/20 border border-slate-900/60 p-3 rounded-xl">
+                      <div key={key} className="flex justify-between items-center bg-slate-50 border border-slate-200/60 p-3 rounded-xl">
                         <span className="text-xs text-slate-500">{formattedKey}:</span>
-                        <span className="text-xs text-slate-200 font-mono font-semibold">{String(val)}</span>
+                        <span className="text-xs text-slate-800 font-mono font-bold">{String(val)}</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
             ) : (
-              <div className="pt-6 border-t border-slate-900 text-center py-6 bg-slate-900/10 rounded-2xl border border-dashed border-slate-900">
-                <span className="text-xs text-slate-500 font-mono">No supplementary specifications attributes logged</span>
+              <div className="pt-6 border-t border-slate-100 text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <span className="text-xs text-slate-400 font-mono">No supplementary specifications logged</span>
               </div>
             )}
           </div>
 
-          {/* Checkout CTA */}
-          <div className="mt-8 pt-6 border-t border-slate-900">
-            <Link
-              href={`/checkout?sku=${product.sku}&name=${encodeURIComponent(product.name)}&price=${product.price}&productId=${product.id}`}
-              className="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 group relative overflow-hidden"
+          {/* Action CTAs */}
+          <div className="mt-8 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              className={`w-full py-4 px-6 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 border ${
+                isOutOfStock
+                  ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                  : addedFeedback
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-350 shadow-sm'
+              }`}
             >
-              <svg className="w-5 h-5 text-white transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              {addedFeedback ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Added to Cart!</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+
+            <Link
+              href={`/checkout?sku=${product.sku}&qty=1`}
+              onClick={(e) => isOutOfStock && e.preventDefault()}
+              className={`w-full py-4 px-6 text-center font-bold rounded-xl transition duration-150 flex items-center justify-center gap-2 ${
+                isOutOfStock
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed pointer-events-none'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow hover:shadow-md'
+              }`}
+            >
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              <span>Add to Cart & Proceed to Checkout</span>
+              <span>Buy Now</span>
             </Link>
           </div>
-
         </section>
       </div>
     </main>
