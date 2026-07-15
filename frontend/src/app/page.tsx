@@ -229,9 +229,9 @@ export default function Home() {
                   {/* Image Component */}
                   <Link href={`/products/${product.slug}`} className="w-full aspect-[4/3] bg-slate-100 flex items-center justify-center border-b border-slate-200 overflow-hidden relative block">
                     <img 
-                      src={product.imageUrl || "https://loremflickr.com/400/300/winter,apparel"} 
+                      src={product.imageUrl || "https://m.media-amazon.com/images/I/615UyJ5OJGL._SL1254_.jpg"} 
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500" 
                     />
                     <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold text-slate-800 border border-slate-200 uppercase tracking-wider shadow-sm">
                       {product.sku.split('-')[1] || 'APPAREL'}
