@@ -232,10 +232,10 @@ export default function ProductDetailsPage({ params }: PageProps) {
         {/* Left Column: Product Image */}
         <section className="bg-white border border-slate-200 rounded-3xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:h-[540px] flex flex-col justify-center relative group shadow-sm">
           {product.imageUrl ? (
-            <img 
-              src={product.imageUrl} 
-              alt={product.name} 
-              className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-500"
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-contain p-4 group-hover:scale-[1.01] transition-transform duration-500"
             />
           ) : (
             <div className="p-8 h-full flex flex-col justify-between">
@@ -263,16 +263,14 @@ export default function ProductDetailsPage({ params }: PageProps) {
               <span className="text-xs font-bold tracking-wider text-indigo-650 uppercase bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
                 WINTER CORE CATALOG
               </span>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                isOutOfStock
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${isOutOfStock
                   ? 'bg-rose-50 text-rose-600 border-rose-150'
                   : isLowStock
-                  ? 'bg-amber-50 text-amber-600 border-amber-150'
-                  : 'bg-emerald-50 text-emerald-600 border-emerald-150'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  isOutOfStock ? 'bg-rose-500' : isLowStock ? 'bg-amber-500' : 'bg-emerald-500'
-                }`} />
+                    ? 'bg-amber-50 text-amber-600 border-amber-150'
+                    : 'bg-emerald-50 text-emerald-600 border-emerald-150'
+                }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isOutOfStock ? 'bg-rose-500' : isLowStock ? 'bg-amber-500' : 'bg-emerald-500'
+                  }`} />
                 {isOutOfStock ? 'Out of Stock' : isLowStock ? `Low Stock (${product.stockCount})` : 'Active / In Stock'}
               </span>
             </div>
@@ -313,7 +311,7 @@ export default function ProductDetailsPage({ params }: PageProps) {
                       warmthLevel: 'Warmth Level',
                       care: 'Care Instructions'
                     }[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                    
+
                     return (
                       <div key={key} className="flex justify-between items-center bg-slate-50 border border-slate-200/60 p-3 rounded-xl">
                         <span className="text-xs text-slate-500">{formattedKey}:</span>
@@ -335,13 +333,12 @@ export default function ProductDetailsPage({ params }: PageProps) {
             <button
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className={`w-full py-4 px-6 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 border ${
-                isOutOfStock
+              className={`w-full py-4 px-6 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 border ${isOutOfStock
                   ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
                   : addedFeedback
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-350 shadow-sm'
-              }`}
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-350 shadow-sm'
+                }`}
             >
               {addedFeedback ? (
                 <>
@@ -363,11 +360,10 @@ export default function ProductDetailsPage({ params }: PageProps) {
             <Link
               href={`/checkout?sku=${product.sku}&qty=1`}
               onClick={(e) => isOutOfStock && e.preventDefault()}
-              className={`w-full py-4 px-6 text-center font-bold rounded-xl transition duration-150 flex items-center justify-center gap-2 ${
-                isOutOfStock
+              className={`w-full py-4 px-6 text-center font-bold rounded-xl transition duration-150 flex items-center justify-center gap-2 ${isOutOfStock
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed pointer-events-none'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow hover:shadow-md'
-              }`}
+                }`}
             >
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

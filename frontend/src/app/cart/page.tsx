@@ -186,7 +186,7 @@ export default function CartPage() {
                         <div key={item.sku} className="p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                           <div className="flex gap-4 items-center">
                             <div className="h-16 w-16 bg-slate-100 border border-slate-200 rounded-xl overflow-hidden shrink-0">
-                              <img src={item.imageUrl || "https://loremflickr.com/100/100/winter"} alt={item.name} className="w-full h-full object-cover" />
+                              <img src={item.imageUrl || "https://m.media-amazon.com/images/I/615UyJ5OJGL._SL1254_.jpg"} alt={item.name} className="w-full h-full object-contain p-1" />
                             </div>
                             <div>
                               <h3 className="text-sm font-bold text-slate-800 line-clamp-1">{item.name}</h3>
