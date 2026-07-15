@@ -1,8 +1,17 @@
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-const { MongoClient } = require('mongodb');
-require('dotenv').config();
+let MongoClient;
+try {
+  MongoClient = require('mongodb').MongoClient;
+} catch (e) {
+  MongoClient = require('mongoose').mongo.MongoClient;
+}
+try {
+  require('dotenv').config();
+} catch (e) {
+  // dotenv is optional in environments where env vars are pre-injected
+}
 
 const uri = process.env.MONGODB_URI;
 if (!uri) {
@@ -18,7 +27,7 @@ const products = [
     price: 189,
     stockCount: 75,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/cashmere,sweater,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/615UyJ5OJGL._SL1254_.jpg",
     attributes: {
       material: "100% Mongolian Cashmere",
       fit: "Regular Fit",
@@ -33,7 +42,7 @@ const products = [
     price: 145,
     stockCount: 120,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/fleece,jacket,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/A1W38FgAtkL._SX679_.jpg",
     attributes: {
       material: "Recycled Polyester Fleece",
       fit: "Athletic Fit",
@@ -48,7 +57,7 @@ const products = [
     price: 89,
     stockCount: 200,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/thermal,underwear,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/71r49yCHtkL._SY741_.jpg",
     attributes: {
       material: "100% Superfine Merino Wool",
       fit: "Slim Fit",
@@ -63,7 +72,7 @@ const products = [
     price: 249,
     stockCount: 45,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/ski,pants,bib,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/71OSVlg0c1L._SL1500_.jpg",
     attributes: {
       material: "Waterproof Ripstop Nylon",
       fit: "Relaxed Fit",
@@ -78,7 +87,7 @@ const products = [
     price: 389,
     stockCount: 25,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/parka,coat,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/619xMvtqClL._SY606_.jpg",
     attributes: {
       material: "DWR Treated Canvas & Down",
       fit: "Relaxed Fit",
@@ -93,7 +102,7 @@ const products = [
     price: 45,
     stockCount: 120,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/balaclava,hood,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/61u5oAftaeL._SY741_.jpg",
     attributes: {
       material: "100% Merino Wool",
       fit: "One Size Fits All",
@@ -108,7 +117,7 @@ const products = [
     price: 320,
     stockCount: 15,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/winter,parka,coat,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/61j2FBMg2LL._SX569_.jpg",
     attributes: {
       material: "Polyester Shell & Down Fill",
       fit: "Regular Fit",
@@ -123,7 +132,7 @@ const products = [
     price: 79,
     stockCount: 45,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/gloves,mittens,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/51zSnhYRWvL.jpg",
     attributes: {
       material: "Goatskin Leather & Nylon",
       fit: "Standard Fit",
@@ -138,7 +147,7 @@ const products = [
     price: 35,
     stockCount: 80,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/beanie,hat,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/61H0MFrsWQL._SL1024_.jpg",
     attributes: {
       material: "Acrylic & Wool Blend",
       fit: "One Size Fits All",
@@ -153,7 +162,7 @@ const products = [
     price: 28,
     stockCount: 150,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/socks,apparel",
+    imageUrl: "https://m.media-amazon.com/images/I/714lOIwZ+8L._SL1200_.jpg",
     attributes: {
       material: "80% Merino Wool, 20% Nylon",
       fit: "Unisex Fit",
