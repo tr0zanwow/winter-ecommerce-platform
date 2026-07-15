@@ -227,7 +227,7 @@ export default function Home() {
                   className="bg-white border border-slate-200 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all duration-200 shadow-sm group overflow-hidden"
                 >
                   {/* Image Component */}
-                  <Link href={`/products/${product.slug}`} className="w-full aspect-[4/3] bg-slate-100 flex items-center justify-center border-b border-slate-200 overflow-hidden relative block">
+                  <Link href={`/products/${product.slug}`} className="w-full aspect-[4/3] bg-white flex items-center justify-center border-b border-slate-200 overflow-hidden relative block">
                     <img 
                       src={product.imageUrl || "https://m.media-amazon.com/images/I/615UyJ5OJGL._SL1254_.jpg"} 
                       alt={product.name}
