@@ -21,153 +21,153 @@ if (!uri) {
 
 const products = [
   {
-    name: "Classic Cashmere Crewneck",
-    slug: "classic-cashmere-crewneck",
-    sku: "WNT-CSH-CRM01",
-    price: 189,
-    stockCount: 75,
+    name: "Thermal Insulated Winter Gloves",
+    slug: "thermal-insulated-winter-gloves",
+    sku: "WNT-GLV-THM01",
+    price: 35,
+    stockCount: 120,
     isActive: true,
     imageUrl: "https://m.media-amazon.com/images/I/615UyJ5OJGL._SL1254_.jpg",
     attributes: {
-      material: "100% Mongolian Cashmere",
-      fit: "Regular Fit",
-      warmthLevel: "Mid-Weight Warmth",
-      care: "Dry clean only"
+      material: "Windproof Nylon & Thermal Fleece",
+      fit: "Standard Fit",
+      warmthLevel: "Extreme Warmth",
+      care: "Hand wash only"
     }
   },
   {
-    name: "Alpine Hybrid Fleece Jacket",
-    slug: "alpine-hybrid-fleece-jacket",
-    sku: "WNT-ALP-FLC02",
-    price: 145,
-    stockCount: 120,
+    name: "Multi-Pack Winter Wool Crew Socks",
+    slug: "multi-pack-winter-wool-crew-socks",
+    sku: "WNT-SCK-WOL02",
+    price: 24,
+    stockCount: 250,
     isActive: true,
     imageUrl: "https://m.media-amazon.com/images/I/A1W38FgAtkL._SX679_.jpg",
     attributes: {
-      material: "Recycled Polyester Fleece",
-      fit: "Athletic Fit",
-      warmthLevel: "High Insulation",
+      material: "80% Merino Wool, 20% Blend",
+      fit: "Unisex Crew Fit",
+      warmthLevel: "Mid-Weight Warmth",
       care: "Machine wash cold"
     }
   },
   {
-    name: "Merino Wool Thermal Base Layer",
-    slug: "merino-wool-thermal-base-layer",
-    sku: "WNT-MRN-BL003",
-    price: 89,
-    stockCount: 200,
+    name: "Women's Hooded Faux-Fur Puffer",
+    slug: "womens-hooded-faux-fur-puffer",
+    sku: "WNT-JKT-FUR03",
+    price: 189,
+    stockCount: 45,
     isActive: true,
     imageUrl: "https://m.media-amazon.com/images/I/71r49yCHtkL._SY741_.jpg",
     attributes: {
-      material: "100% Superfine Merino Wool",
-      fit: "Slim Fit",
+      material: "Water-Resistant Polyester Shell",
+      fit: "Regular Fit",
+      warmthLevel: "Maximum Insulation",
+      care: "Dry clean recommended"
+    }
+  },
+  {
+    name: "BOLDFIT Ribbed Knit Lavender Beanie",
+    slug: "boldfit-ribbed-knit-lavender-beanie",
+    sku: "WNT-BNI-BOL04",
+    price: 18,
+    stockCount: 150,
+    isActive: true,
+    imageUrl: "https://m.media-amazon.com/images/I/71OSVlg0c1L._SL1500_.jpg",
+    attributes: {
+      material: "100% Stretch Acrylic",
+      fit: "One Size Fits Most",
       warmthLevel: "Lightweight Warmth",
+      care: "Hand wash only"
+    }
+  },
+  {
+    name: "Men's Stripe-Trim Olive Bomber Jacket",
+    slug: "mens-stripe-trim-olive-bomber-jacket",
+    sku: "WNT-JKT-BMB05",
+    price: 85,
+    stockCount: 80,
+    isActive: true,
+    imageUrl: "https://m.media-amazon.com/images/I/619xMvtqClL._SY606_.jpg",
+    attributes: {
+      material: "Polyester with Striped Ribbed Trim",
+      fit: "Regular Bomber Fit",
+      warmthLevel: "Mid-Weight Warmth",
       care: "Machine wash cold"
     }
   },
   {
-    name: "Alpine Technical Ski Bib",
-    slug: "alpine-technical-ski-bib",
-    sku: "WNT-SKI-BIB04",
-    price: 249,
-    stockCount: 45,
-    isActive: true,
-    imageUrl: "https://m.media-amazon.com/images/I/71OSVlg0c1L._SL1500_.jpg",
-    attributes: {
-      material: "Waterproof Ripstop Nylon",
-      fit: "Relaxed Fit",
-      warmthLevel: "Heavyweight Insulation",
-      care: "Hand wash cold"
-    }
-  },
-  {
-    name: "Arctic Explorer Parka",
-    slug: "arctic-explorer-parka",
-    sku: "WNT-ARC-PRK05",
-    price: 389,
-    stockCount: 25,
-    isActive: true,
-    imageUrl: "https://m.media-amazon.com/images/I/619xMvtqClL._SY606_.jpg",
-    attributes: {
-      material: "DWR Treated Canvas & Down",
-      fit: "Relaxed Fit",
-      warmthLevel: "Extreme Warmth",
-      care: "Dry clean only"
-    }
-  },
-  {
-    name: "Summit Merino Balaclava",
-    slug: "summit-merino-balaclava",
-    sku: "WNT-MRN-BLV06",
-    price: 45,
-    stockCount: 120,
+    name: "Men's Utility Gray Cargo Pants",
+    slug: "mens-utility-gray-cargo-pants",
+    sku: "WNT-PNT-CRG06",
+    price: 49,
+    stockCount: 110,
     isActive: true,
     imageUrl: "https://m.media-amazon.com/images/I/61u5oAftaeL._SY741_.jpg",
     attributes: {
-      material: "100% Merino Wool",
-      fit: "One Size Fits All",
+      material: "100% Cotton Ripstop",
+      fit: "Relaxed Fit",
+      warmthLevel: "Lightweight Warmth",
+      care: "Machine wash warm"
+    }
+  },
+  {
+    name: "BOLDFIT Color-Blocked Winter Puffer",
+    slug: "boldfit-color-blocked-winter-puffer",
+    sku: "WNT-JKT-BLK07",
+    price: 120,
+    stockCount: 60,
+    isActive: true,
+    imageUrl: "https://m.media-amazon.com/images/I/61j2FBMg2LL._SX569_.jpg",
+    attributes: {
+      material: "DWR Nylon & Synthetic Down Fill",
+      fit: "Regular Fit",
+      warmthLevel: "High Insulation",
+      care: "Machine wash cold"
+    }
+  },
+  {
+    name: "Plaid Fringe Winter Scarf",
+    slug: "plaid-fringe-winter-scarf",
+    sku: "WNT-SCF-PLD08",
+    price: 22,
+    stockCount: 130,
+    isActive: true,
+    imageUrl: "https://m.media-amazon.com/images/I/51zSnhYRWvL.jpg",
+    attributes: {
+      material: "Soft Acrylic & Wool Blend",
+      fit: "Over-Sized Fit",
       warmthLevel: "Mid-Weight Warmth",
+      care: "Hand wash only"
+    }
+  },
+  {
+    name: "Fleece-Lined Beanie Hat & Scarf Set",
+    slug: "fleece-lined-beanie-hat-scarf-set",
+    sku: "WNT-SET-KNT09",
+    price: 39,
+    stockCount: 95,
+    isActive: true,
+    imageUrl: "https://m.media-amazon.com/images/I/61H0MFrsWQL._SL1024_.jpg",
+    attributes: {
+      material: "Acrylic Cable Knit & Fleece Lining",
+      fit: "One Size Fits All",
+      warmthLevel: "Maximum Insulation",
       care: "Hand wash cold"
     }
   },
   {
-    name: "Winter Parka Coat",
-    slug: "winter-parka-coat",
-    sku: "WNT-PRK-COT07",
-    price: 320,
-    stockCount: 15,
-    isActive: true,
-    imageUrl: "https://m.media-amazon.com/images/I/61j2FBMg2LL._SX569_.jpg",
-    attributes: {
-      material: "Polyester Shell & Down Fill",
-      fit: "Regular Fit",
-      warmthLevel: "Extreme Warmth",
-      care: "Dry clean only"
-    }
-  },
-  {
-    name: "Glacier Expedition Gloves",
-    slug: "glacier-expedition-gloves",
-    sku: "WNT-GLC-GLV08",
-    price: 79,
-    stockCount: 45,
-    isActive: true,
-    imageUrl: "https://m.media-amazon.com/images/I/51zSnhYRWvL.jpg",
-    attributes: {
-      material: "Goatskin Leather & Nylon",
-      fit: "Standard Fit",
-      warmthLevel: "High Insulation",
-      care: "Hand wash only"
-    }
-  },
-  {
-    name: "Cascade Cable Knit Beanie",
-    slug: "cascade-cable-knit-beanie",
-    sku: "WNT-CBL-BNI09",
-    price: 35,
-    stockCount: 80,
-    isActive: true,
-    imageUrl: "https://m.media-amazon.com/images/I/61H0MFrsWQL._SL1024_.jpg",
-    attributes: {
-      material: "Acrylic & Wool Blend",
-      fit: "One Size Fits All",
-      warmthLevel: "Mid-Weight Warmth",
-      care: "Hand wash only"
-    }
-  },
-  {
-    name: "Thermal Merino Wool Socks",
-    slug: "thermal-merino-wool-socks",
-    sku: "WNT-TRM-SCK10",
-    price: 28,
-    stockCount: 150,
+    name: "BOLDFIT Slouchy Navy Knit Beanie",
+    slug: "boldfit-slouchy-navy-knit-beanie",
+    sku: "WNT-BNI-NAV10",
+    price: 15,
+    stockCount: 140,
     isActive: true,
     imageUrl: "https://m.media-amazon.com/images/I/714lOIwZ+8L._SL1200_.jpg",
     attributes: {
-      material: "80% Merino Wool, 20% Nylon",
-      fit: "Unisex Fit",
-      warmthLevel: "High Insulation",
-      care: "Machine wash warm"
+      material: "100% Soft Knit Acrylic",
+      fit: "Slouchy Relaxed Fit",
+      warmthLevel: "Lightweight Warmth",
+      care: "Machine wash cold"
     }
   }
 ];
