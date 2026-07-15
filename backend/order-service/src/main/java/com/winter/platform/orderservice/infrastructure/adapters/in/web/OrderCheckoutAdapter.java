@@ -42,7 +42,7 @@ public class OrderCheckoutAdapter {
 
         List<OrderItemDTO> orderItems = request.items().stream()
                 .map(item -> new OrderItemDTO(
-                        UUID.randomUUID().toString(),
+                        (item.productId() != null && !item.productId().isBlank()) ? item.productId() : UUID.randomUUID().toString(),
                         item.sku(),
                         item.quantity(),
                         item.price()
@@ -168,6 +168,7 @@ public class OrderCheckoutAdapter {
     ) {}
 
     public record CheckoutItem(
+            String productId,
             String sku,
             Integer quantity,
             Double price
