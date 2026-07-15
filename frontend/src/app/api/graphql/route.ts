@@ -36,9 +36,35 @@ const typeDefs = `#graphql
     attributes: JSON
   }
 
+  type Order {
+    id: ID!
+    customerId: String!
+    status: String!
+    subtotal: Float!
+    tax: Float!
+    shippingFee: Float!
+    grandTotal: Float!
+    itemsCount: Int!
+    shippingAddress: String
+    itemsJson: String
+    createdAt: String
+  }
+
+  type OrderResponse {
+    success: Boolean!
+    message: String
+    order: Order
+  }
+
   type Query {
     products: [Product]
     product(slug: String!): Product
+    orders(status: String, page: Int, size: Int): [Order]
+    order(id: ID!): Order
+  }
+
+  type Mutation {
+    cancelOrder(id: ID!): OrderResponse
   }
 `;
 
@@ -82,6 +108,72 @@ const resolvers = {
       } catch (error) {
         console.error(`Error in GraphQL product resolver for slug ${slug}:`, error);
         return null;
+      }
+    },
+    orders: async (_: any, { status, page, size }: { status?: string; page?: number; size?: number }) => {
+      try {
+        const queryParams = new URLSearchParams();
+        if (status) queryParams.append('status', status);
+        if (page !== undefined) queryParams.append('page', String(page));
+        if (size !== undefined) queryParams.append('size', String(size));
+
+        const response = await fetch(`http://order-service:8081/winter/api/orders?${queryParams.toString()}`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch orders: ${response.statusText}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Error in GraphQL orders resolver:', error);
+        return [];
+      }
+    },
+    order: async (_: any, { id }: { id: string }) => {
+      try {
+        const response = await fetch(`http://order-service:8081/winter/api/orders/${id}`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error(`Failed to fetch order: ${response.statusText}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error(`Error in GraphQL order resolver for id ${id}:`, error);
+        return null;
+      }
+    },
+  },
+  Mutation: {
+    cancelOrder: async (_: any, { id }: { id: string }) => {
+      try {
+        const response = await fetch(`http://order-service:8081/winter/api/orders/${id}/cancel`, {
+          method: 'PATCH',
+          cache: 'no-store',
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          return {
+            success: false,
+            message: data.message || 'Failed to cancel order.',
+            order: null,
+          };
+        }
+        return {
+          success: true,
+          message: 'Order cancelled successfully.',
+          order: data,
+        };
+      } catch (error: any) {
+        console.error(`Error in GraphQL cancelOrder resolver for id ${id}:`, error);
+        return {
+          success: false,
+          message: error.message || 'Failed to cancel order.',
+          order: null,
+        };
       }
     },
   },
