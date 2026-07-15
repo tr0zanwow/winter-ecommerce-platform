@@ -71,13 +71,21 @@ export default async function Home() {
   const renderHeader = () => (
     <header className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-slate-950 shadow-lg shadow-indigo-500/20">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-slate-950 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition duration-150">
             W
           </div>
           <span className="font-semibold text-lg tracking-tight text-white">
             Winter E-commerce <span className="text-cyan-400 font-normal">Platform</span>
           </span>
+        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/orders" className="text-sm font-semibold text-slate-400 hover:text-white transition duration-150 flex items-center gap-1.5 bg-slate-900/50 border border-slate-850 px-3.5 py-1.5 rounded-xl hover:bg-slate-900 hover:border-slate-700">
+            <svg className="w-4 h-4 text-cyan-405" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>Orders</span>
+          </Link>
         </div>
       </div>
     </header>
@@ -243,19 +251,18 @@ export default async function Home() {
                       </div>
 
                       {/* Compact Attributes Preview */}
-                      {product.attributes && Object.keys(product.attributes).length > 0 && (
+                      {product.attributes && (
                         <div className="mt-4 pt-4 border-t border-slate-800/60 flex flex-wrap gap-1.5">
-                          {Object.entries(product.attributes)
-                            .filter(([_, val]) => typeof val === 'string' || typeof val === 'number')
-                            .slice(0, 3)
-                            .map(([key, val]) => (
-                              <span 
-                                key={key} 
-                                className="px-2 py-1 bg-slate-800/40 border border-slate-700/50 rounded-md text-[10px] text-slate-400 font-medium whitespace-nowrap"
-                              >
-                                <span className="text-slate-500 font-normal capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span> {String(val)}
-                              </span>
-                            ))}
+                          {product.attributes.material && (
+                            <span className="px-2 py-1 bg-slate-800/40 border border-slate-700/50 rounded-md text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                              <span className="text-slate-500 font-normal">Material:</span> {product.attributes.material}
+                            </span>
+                          )}
+                          {product.attributes.warmthLevel && (
+                            <span className="px-2 py-1 bg-slate-800/40 border border-slate-700/50 rounded-md text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                              <span className="text-slate-500 font-normal">Warmth:</span> {product.attributes.warmthLevel}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>

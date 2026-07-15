@@ -18,12 +18,11 @@ const products = [
     price: 189,
     stockCount: 75,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/cashmere,sweater",
+    imageUrl: "https://loremflickr.com/400/300/cashmere,sweater,apparel",
     attributes: {
       material: "100% Mongolian Cashmere",
-      ply: "2-ply",
-      knitStyle: "Ribbed trim",
-      insulationRating: "Mid-Weight Warmth",
+      fit: "Regular Fit",
+      warmthLevel: "Mid-Weight Warmth",
       care: "Dry clean only"
     }
   },
@@ -34,13 +33,12 @@ const products = [
     price: 145,
     stockCount: 120,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/fleece,jacket",
+    imageUrl: "https://loremflickr.com/400/300/fleece,jacket,apparel",
     attributes: {
       material: "Recycled Polyester Fleece",
-      weatherResistance: "Wind-resistant panels",
-      breathable: true,
-      pockets: 6,
-      activityFit: "Active Mountain Touring"
+      fit: "Athletic Fit",
+      warmthLevel: "High Insulation",
+      care: "Machine wash cold"
     }
   },
   {
@@ -50,14 +48,12 @@ const products = [
     price: 89,
     stockCount: 200,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/thermal,apparel",
+    imageUrl: "https://loremflickr.com/400/300/thermal,underwear,apparel",
     attributes: {
       material: "100% Superfine Merino Wool",
-      micronCount: "18.5 micron",
-      weightGSM: 250,
-      moistureWicking: true,
-      type: "thermal",
-      seamType: "Flatlock anti-chafing"
+      fit: "Slim Fit",
+      warmthLevel: "Lightweight Warmth",
+      care: "Machine wash cold"
     }
   },
   {
@@ -67,13 +63,12 @@ const products = [
     price: 249,
     stockCount: 45,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/ski,bib,pants",
+    imageUrl: "https://loremflickr.com/400/300/ski,pants,bib,apparel",
     attributes: {
-      waterproofRating: "20k",
-      breathability: "15k",
-      insulation: "Thinsulate 80g",
-      pockets: 4,
-      reccoReflector: true
+      material: "Waterproof Ripstop Nylon",
+      fit: "Relaxed Fit",
+      warmthLevel: "Heavyweight Insulation",
+      care: "Hand wash cold"
     }
   },
   {
@@ -83,12 +78,12 @@ const products = [
     price: 389,
     stockCount: 25,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/arctic,parka",
+    imageUrl: "https://loremflickr.com/400/300/parka,coat,apparel",
     attributes: {
-      downFillPower: 800,
-      hoodFur: "Synthetic",
-      temperatureRating: "-30°C",
-      outerShell: "DWR Treated Canvas"
+      material: "DWR Treated Canvas & Down",
+      fit: "Relaxed Fit",
+      warmthLevel: "Extreme Warmth",
+      care: "Dry clean only"
     }
   },
   {
@@ -98,12 +93,12 @@ const products = [
     price: 45,
     stockCount: 120,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/balaclava,mask",
+    imageUrl: "https://loremflickr.com/400/300/balaclava,hood,apparel",
     attributes: {
       material: "100% Merino Wool",
-      weight: "300gsm",
-      knitType: "Interlock",
-      odorResistant: true
+      fit: "One Size Fits All",
+      warmthLevel: "Mid-Weight Warmth",
+      care: "Hand wash cold"
     }
   },
   {
@@ -113,12 +108,12 @@ const products = [
     price: 320,
     stockCount: 15,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/winter,parka,coat",
+    imageUrl: "https://loremflickr.com/400/300/winter,parka,coat,apparel",
     attributes: {
-      material: "Polyester shell, Down fill",
-      waterproof: true,
-      layers: 3,
-      temperatureRating: "-20°C"
+      material: "Polyester Shell & Down Fill",
+      fit: "Regular Fit",
+      warmthLevel: "Extreme Warmth",
+      care: "Dry clean only"
     }
   },
   {
@@ -128,42 +123,42 @@ const products = [
     price: 79,
     stockCount: 45,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/glacier,gloves,winter",
+    imageUrl: "https://loremflickr.com/400/300/gloves,mittens,apparel",
     attributes: {
-      insulation: "Thinsulate",
-      touchScreenCompatible: true,
-      waterproof: true,
-      material: "Goatskin leather & nylon"
+      material: "Goatskin Leather & Nylon",
+      fit: "Standard Fit",
+      warmthLevel: "High Insulation",
+      care: "Hand wash only"
     }
   },
   {
-    name: "Vortex Thermal Goggles",
-    slug: "vortex-thermal-goggles",
-    sku: "WNT-VTX-GGL09",
-    price: 129,
-    stockCount: 22,
+    name: "Cascade Cable Knit Beanie",
+    slug: "cascade-cable-knit-beanie",
+    sku: "WNT-CBL-BNI09",
+    price: 35,
+    stockCount: 80,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/ski,goggles,snow",
+    imageUrl: "https://loremflickr.com/400/300/beanie,hat,apparel",
     attributes: {
-      lensType: "Dual-pane cylindrical",
-      antiFog: true,
-      uvProtection: "UV400",
-      frameSize: "Medium/Large"
+      material: "Acrylic & Wool Blend",
+      fit: "One Size Fits All",
+      warmthLevel: "Mid-Weight Warmth",
+      care: "Hand wash only"
     }
   },
   {
-    name: "Summit Gore-Tex Snow Boots",
-    slug: "summit-gore-tex-snow-boots",
-    sku: "WNT-SMT-BTS10",
-    price: 215,
-    stockCount: 35,
+    name: "Thermal Merino Wool Socks",
+    slug: "thermal-merino-wool-socks",
+    sku: "WNT-TRM-SCK10",
+    price: 28,
+    stockCount: 150,
     isActive: true,
-    imageUrl: "https://loremflickr.com/400/300/snow,boots,winter",
+    imageUrl: "https://loremflickr.com/400/300/socks,apparel",
     attributes: {
-      membrane: "Gore-Tex",
-      insulation: "400g PrimaLoft",
-      soleType: "Vibram Arctic Grip",
-      closure: "Lace-up"
+      material: "80% Merino Wool, 20% Nylon",
+      fit: "Unisex Fit",
+      warmthLevel: "High Insulation",
+      care: "Machine wash warm"
     }
   }
 ];

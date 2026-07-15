@@ -98,6 +98,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                   price
                   stockCount
                   isActive
+                  imageUrl
                   attributes
                 }
               }
@@ -174,8 +175,16 @@ export default async function ProductDetailsPage({ params }: PageProps) {
             </svg>
             Back to Core catalog
           </Link>
-          <div className="text-slate-500 text-xs font-mono">
-            GATEWAY PATH: /products/{product.slug}
+          <div className="flex items-center gap-6">
+            <Link href="/orders" className="text-sm font-semibold text-slate-400 hover:text-white transition duration-150 flex items-center gap-1.5 bg-slate-900/50 border border-slate-850 px-3.5 py-1.5 rounded-xl hover:bg-slate-900 hover:border-slate-700">
+              <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span>Orders</span>
+            </Link>
+            <div className="text-slate-500 text-xs font-mono">
+              GATEWAY PATH: /products/{product.slug}
+            </div>
           </div>
         </div>
       </header>
@@ -183,25 +192,35 @@ export default async function ProductDetailsPage({ params }: PageProps) {
       {/* Main Luxury Split Panel Layout */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12">
         
-        {/* Left Column: Dark Luxury Placeholder Image */}
-        <section className="bg-slate-900/30 border border-slate-800/80 rounded-3xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:h-[540px] flex flex-col justify-between p-8 relative group shadow-2xl backdrop-blur-sm">
-          {/* Subtle patterns */}
-          <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-          
-          <div className="self-end bg-slate-950/40 border border-slate-800/40 px-3 py-1.5 rounded-lg backdrop-blur-md">
-            <span className="text-[10px] text-slate-400 font-mono">ASSET STATE: PLACEHOLDER_VECTOR</span>
-          </div>
+        {/* Left Column: Premium Product Image */}
+        <section className="bg-slate-900/30 border border-slate-800/80 rounded-3xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:h-[540px] flex flex-col justify-center relative group shadow-2xl backdrop-blur-sm">
+          {product.imageUrl ? (
+            <img 
+              src={product.imageUrl} 
+              alt={product.name} 
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+            />
+          ) : (
+            <div className="p-8 h-full flex flex-col justify-between">
+              {/* Subtle patterns */}
+              <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
+              
+              <div className="self-end bg-slate-950/40 border border-slate-800/40 px-3 py-1.5 rounded-lg backdrop-blur-md relative z-10">
+                <span className="text-[10px] text-slate-400 font-mono">ASSET STATE: PLACEHOLDER_VECTOR</span>
+              </div>
 
-          <div className="flex flex-col items-center justify-center flex-1 py-12 relative z-10">
-            <span className="text-8xl font-black text-slate-800/40 select-none font-mono">W</span>
-            <p className="text-xs text-slate-500 mt-4 tracking-wider uppercase font-semibold">Image Asset Vector Pending</p>
-          </div>
+              <div className="flex flex-col items-center justify-center flex-1 py-12 relative z-10">
+                <span className="text-8xl font-black text-slate-800/40 select-none font-mono">W</span>
+                <p className="text-xs text-slate-500 mt-4 tracking-wider uppercase font-semibold">Image Asset Vector Pending</p>
+              </div>
 
-          <div className="relative z-10 flex justify-between items-center text-xs text-slate-400 border-t border-slate-900/60 pt-4">
-            <span>MODEL SCALE: 1.0</span>
-            <span>FORMAT: NO_SQL_SPECS</span>
-          </div>
+              <div className="relative z-10 flex justify-between items-center text-xs text-slate-400 border-t border-slate-900/60 pt-4">
+                <span>MODEL SCALE: 1.0</span>
+                <span>FORMAT: NO_SQL_SPECS</span>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Right Column: Metadata & Core Details */}
@@ -253,15 +272,24 @@ export default async function ProductDetailsPage({ params }: PageProps) {
               <div className="pt-6 border-t border-slate-900 space-y-4">
                 <div>
                   <h3 className="text-xs text-slate-500 uppercase tracking-widest font-bold">Product Specifications</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Parsed from distributed NoSQL payload document</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Garment details and thermal attributes</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Object.entries(product.attributes).map(([key, val]) => (
-                    <div key={key} className="flex justify-between items-center bg-slate-900/20 border border-slate-900/60 p-3 rounded-xl">
-                      <span className="text-xs text-slate-500 capitalize">{key}:</span>
-                      <span className="text-xs text-slate-200 font-mono font-semibold">{String(val)}</span>
-                    </div>
-                  ))}
+                  {Object.entries(product.attributes).map(([key, val]) => {
+                    const formattedKey = {
+                      material: 'Material Composition',
+                      fit: 'Product Fit',
+                      warmthLevel: 'Warmth Level',
+                      care: 'Care Instructions'
+                    }[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    
+                    return (
+                      <div key={key} className="flex justify-between items-center bg-slate-900/20 border border-slate-900/60 p-3 rounded-xl">
+                        <span className="text-xs text-slate-500">{formattedKey}:</span>
+                        <span className="text-xs text-slate-200 font-mono font-semibold">{String(val)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : (

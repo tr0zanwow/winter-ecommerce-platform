@@ -23,6 +23,9 @@ export class Product {
   @Prop({ default: true })
   isActive: boolean;
 
+  @Prop()
+  imageUrl?: string;
+
   @Prop({ type: MongooseSchema.Types.Mixed })
   attributes: Record<string, any>;
 }

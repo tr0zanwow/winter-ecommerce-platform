@@ -29,6 +29,16 @@ function PaymentContent() {
       if (!active) return;
 
       try {
+        let shippingAddress = null;
+        try {
+          const stored = sessionStorage.getItem('winter_shipping_details');
+          if (stored) {
+            shippingAddress = JSON.parse(stored);
+          }
+        } catch (e) {
+          console.error('Failed to parse shipping details', e);
+        }
+
         const payload = {
           customerId: 'CST-9943',
           items: [
@@ -39,6 +49,7 @@ function PaymentContent() {
               price: price,
             },
           ],
+          shippingAddress: shippingAddress,
         };
 
         const res = await fetch('/winter/api/orders/checkout', {
