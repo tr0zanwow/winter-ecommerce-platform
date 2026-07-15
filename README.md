@@ -17,6 +17,15 @@
     <strong>👉 Live Production Gateway Link:</strong> 
     <a href="https://projects.pranilrathod.dev/winter" target="_blank">projects.pranilrathod.dev/winter</a>
   </div>
+
+  <div style="background-color: #f0f7ff; border-left: 5px solid #0056b3; padding: 18px; margin: 20px 0; border-radius: 6px; text-align: left; max-width: 900px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+    <strong style="color: #0056b3; font-size: 1.15em;">🚀 Key Engineering Highlights &amp; Metrics (KPIs)</strong>
+    <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #2d3748;">
+      <li>⚡ <strong>Main Branch CD Speed:</strong> Any push to <code>main</code> is automatically built, verified, and deployed to EKS within <strong>2 minutes</strong>.</li>
+      <li>🔧 <strong>Infra Provisioning SLA:</strong> Complete infrastructure setup/teardown via the AWS CDK pipeline is fully completed in <strong>20 minutes</strong>.</li>
+      <li>🌐 <strong>Zero-Touch Edge Routing:</strong> DNS CNAME records and Cloudflare proxy mappings targeting <code>projects.pranilrathod.dev/winter</code> are 100% automated (no manual work).</li>
+    </ul>
+  </div>
 </div>
 
 <hr />
@@ -407,12 +416,7 @@ kubectl rollout restart deployment/frontend-deployment
   <li><strong>Phase C (Cloudflare Edge Alignment):</strong> Captures the dynamic Application Load Balancer address changes automatically post-CDK rollout using an embedded automated tracking record client validation hook script, updating domain CNAME record mappings at <code>projects.pranilrathod.dev</code> inside Cloudflare DNS frameworks with active proxying enabled securely.</li>
 </ol>
 
-<h3>📊 Operational Key Performance Indicators (KPIs)</h3>
 
-<ul>
-  <li><strong>Continuous Deployment (CD) SLA:</strong> Any code changes pushed to the <code>main</code> branch are built, verified, and deployed to EKS within <strong>2 minutes</strong>. A complete infrastructure teardown or fresh provisioning cycle via the AWS CDK pipeline is fully completed in approximately <strong>20 minutes</strong>.</li>
-  <li><strong>Zero-Touch Edge Routing Automation:</strong> Domain CNAME records and Cloudflare proxy mappings pointing to <code>projects.pranilrathod.dev/winter</code> are 100% automated within the deployment pipeline. Absolutely zero manual steps or DNS configurations are required.</li>
-</ul>
 
 <h3>In-Cluster Aggregated Logging Infrastructure</h3>
 <p>The cluster maintains deep telemetry aggregation layers using a single-replica <strong>Grafana Loki</strong> service coupled with high-density host node <strong>Promtail DaemonSets</strong>.</p>
