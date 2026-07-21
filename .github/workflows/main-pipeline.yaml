@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  TARGET_INFRA: eks  # Target Infrastructure Strategy Toggle: 'eks' or 'apprunner'
+  TARGET_INFRA: apprunner  # Target Infrastructure Strategy Toggle: 'eks' or 'apprunner'
 
 jobs:
   detect-changes:
