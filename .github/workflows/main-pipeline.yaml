@@ -33,6 +33,7 @@ jobs:
           filters: |
             infrastructure:
               - 'infrastructure/**'
+              - '.github/workflows/main-pipeline.yaml'
             catalog:
               - 'backend/catalog-service/**'
             inventory:
@@ -148,6 +149,17 @@ jobs:
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
           kubectl apply -f infrastructure/k8s-monitoring/loki-stack.yaml
+
+      - name: Destroy Inactive Infrastructure Target
+        working-directory: infrastructure
+        run: |
+          if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
+            echo "Destroying inactive App Runner Stack..."
+            npx cdk destroy WinterAppRunnerStack --force -c targetInfra=apprunner || echo "App Runner stack already destroyed or not present."
+          else
+            echo "Destroying inactive EKS Stack..."
+            npx cdk destroy WinterEksStackV2 --force -c targetInfra=eks || echo "EKS stack already destroyed or not present."
+          fi
 
   deploy-catalog:
     name: Deploy Catalog Service
