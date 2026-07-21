@@ -10,7 +10,7 @@
   </p>
 
   <p>
-    A high-performance, production-grade distributed retail platform created for PeerIsland/Winter as an assignment, running on an upscale 9-node <strong>Amazon EKS (v1.35)</strong> cluster. Features a decoupled microservices framework, asynchronous fanning event backbones, zero-trust cloud network security isolation, and local Redis cache coordination grids.
+    A high-performance, production-grade distributed retail platform created for PeerIsland/Winter as an assignment, supporting a flexible <strong>Dual-Infrastructure Strategy</strong>: deployable to either an upscale 9-node <strong>Amazon EKS (v1.35)</strong> cluster (Strategy A) or an ultra low-cost serverless <strong>AWS App Runner</strong> environment (Strategy B). Features a decoupled microservices framework, asynchronous fanning event backbones, zero-trust cloud network security isolation, and local Redis cache coordination grids.
   </p>
 
   <div style="margin-top: 15px; margin-bottom: 20px;">
@@ -21,9 +21,9 @@
 
 > [!TIP]
 > ### 🚀 Key Engineering Highlights & Metrics (KPIs)
-> - ⚡ **Main Branch CD Speed:** Any push to `main` is automatically built, verified, and deployed to EKS within **2 minutes**.
-> - 🔧 **Infra Provisioning SLA:** Complete infrastructure setup/teardown via the AWS CDK pipeline is fully completed in **20 minutes**.
-> - 🌐 **Zero-Touch Edge Routing:** DNS CNAME records and Cloudflare proxy mappings targeting `projects.pranilrathod.dev/winter` are 100% automated (no manual work).
+> - ⚡ **Main Branch CD Speed:** Any push to `main` is automatically built, verified, and deployed to the active target within **2 minutes**.
+> - 🔧 **Infra Provisioning SLA:** Complete infrastructure setup, target transition, and automated teardown of idle infrastructure via the AWS CDK pipeline takes **20 minutes**.
+> - 🌐 **Zero-Touch Edge Routing:** DNS CNAME records and Cloudflare proxy mappings targeting `projects.pranilrathod.dev/winter` are 100% automated, dynamically resolving to either the EKS ALB or App Runner service endpoint based on the active target.
 
 
 <hr />
@@ -67,9 +67,10 @@
       </td>
       <td valign="top">
         • AWS CDK (IaC blueprints)<br/>
+        • AWS App Runner (Strategy B)<br/>
         • Cloudflare Proxy Engine<br/>
         • Path-Filtered GitOps pipelines<br/>
-        • Grafana Loki / Promtail
+        • Grafana Loki / Promtail (EKS)
       </td>
     </tr>
   </tbody>
@@ -310,8 +311,9 @@
 │   └── package.json
 ├── infrastructure/
 │   ├── lib/
+│   │   ├── apprunner-stack.ts          ◄── App Runner Service Blueprints & Target B Connectors
 │   │   ├── eks-stack.ts                ◄── Upscaled Worker Node Groups & IRSA OIDC Constructs
-│   │   └── vpc-stack.ts                ◄── Multi-AZ Network Blueprints with Private Subnets
+│   │   └── vpc-stack.ts                ◄── Multi-AZ Network Blueprints & Shared RDS/SQS/SNS Stack
 │   ├── k8s-monitoring/
 │   │   └── loki-stack.yaml             ◄── Grafana Loki Single-Replica & Promtail DaemonSets
 │   └── cdk.json
@@ -398,20 +400,29 @@ node seed.js
 
 <h2>🚀 GitOps Automated Deployment &amp; Observability</h2>
 
-<p>Platform deliveries conform entirely to declarative automated workflows managed through GitHub Actions and AWS CDK infrastructure definitions.</p>
+<p>Platform deliveries conform entirely to declarative automated workflows managed through GitHub Actions and AWS CDK infrastructure definitions. We support switching between EKS (Strategy A) and AWS App Runner (Strategy B) via a single toggle inside the main workflow file.</p>
 
 <h3>Path-Filtered Promotion Architecture</h3>
-<p>Our consolidated <code>main-pipeline.yaml</code> avoids redundant resource scheduling cycles by scanning changes through path-filtering blocks before kicking off target ECR builds:</p>
+<p>Our consolidated <code>main-pipeline.yaml</code> avoids redundant resource scheduling cycles by scanning changes through path-filtering blocks before triggering CDK validation or container builds:</p>
 
 <ol>
-  <li><strong>Phase A (Infrastructure):</strong> Monitors modifications inside <code>infrastructure/**</code>. Runs <code>cdk diff</code> code validations and promotes updates to cloud VPC network nodes securely.</li>
-  <li><strong>Phase B (Microservices Grid):</strong> Intercepts modifications within target project workspaces, spins up modern multi-stage Alpine Docker layers under a non-root system user context, and tags registries before forcing cluster rolling restarts:
-    <pre>
-kubectl rollout restart deployment/order-service-deployment
-kubectl rollout restart deployment/frontend-deployment
-    </pre>
+  <li><strong>Phase A (Infrastructure &amp; Strategy Selection):</strong> Monitors changes in <code>infrastructure/**</code> and <code>main-pipeline.yaml</code>. Based on the <code>TARGET_INFRA</code> toggle:
+    <ul>
+      <li>Invokes CDK synth/deploy passing context variables (e.g. <code>-c targetInfra=apprunner</code> or <code>-c targetInfra=eks</code>).</li>
+      <li><strong>Automated Teardown:</strong> Automatically runs <code>cdk destroy</code> against the inactive strategy target stack to prevent dual infrastructure resource duplication and idle cloud costs, keeping only the selected strategy active.</li>
+    </ul>
   </li>
-  <li><strong>Phase C (Cloudflare Edge Alignment):</strong> Captures the dynamic Application Load Balancer address changes automatically post-CDK rollout using an embedded automated tracking record client validation hook script, updating domain CNAME record mappings at <code>projects.pranilrathod.dev</code> inside Cloudflare DNS frameworks with active proxying enabled securely.</li>
+  <li><strong>Phase B (Microservices Grid Rolling Update):</strong> Depending on the target strategy:
+    <ul>
+      <li><strong>Strategy A (EKS):</strong> Automatically issues rolling restarts to the Kubernetes deployment resources:
+        <pre>kubectl rollout restart deployment/catalog-service-deployment</pre>
+      </li>
+      <li><strong>Strategy B (App Runner):</strong> Issues a start-deployment update to the live App Runner service using the AWS CLI:
+        <pre>aws apprunner start-deployment --service-arn ...</pre>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Phase C (Dynamic Cloudflare Edge Routing):</strong> Resolves the active routing endpoint depending on the selected strategy (either the EKS Application Load Balancer DNS name or the App Runner Frontend Service URL) and automatically synchronizes the CNAME record for <code>projects.pranilrathod.dev</code> on Cloudflare.</li>
 </ol>
 
 

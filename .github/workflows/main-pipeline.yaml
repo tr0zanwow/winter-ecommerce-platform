@@ -99,6 +99,17 @@ jobs:
         working-directory: infrastructure
         run: npm ci
 
+      - name: Tear Down Inactive Infrastructure Strategy
+        working-directory: infrastructure
+        run: |
+          if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
+            echo "Tearing down inactive App Runner Stack to prevent conflict..."
+            npx cdk destroy WinterAppRunnerStack --force -c targetInfra=apprunner || true
+          else
+            echo "Tearing down inactive EKS Stack to release shared resources..."
+            npx cdk destroy WinterEksStackV2 --force -c targetInfra=eks || true
+          fi
+
       - name: Execute CDK Deploy
         working-directory: infrastructure
         run: npx cdk deploy --all --require-approval never -c targetInfra=${{ env.TARGET_INFRA }}
@@ -149,17 +160,6 @@ jobs:
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
           kubectl apply -f infrastructure/k8s-monitoring/loki-stack.yaml
-
-      - name: Destroy Inactive Infrastructure Target
-        working-directory: infrastructure
-        run: |
-          if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
-            echo "Destroying inactive App Runner Stack..."
-            npx cdk destroy WinterAppRunnerStack --force -c targetInfra=apprunner || echo "App Runner stack already destroyed or not present."
-          else
-            echo "Destroying inactive EKS Stack..."
-            npx cdk destroy WinterEksStackV2 --force -c targetInfra=eks || echo "EKS stack already destroyed or not present."
-          fi
 
   deploy-catalog:
     name: Deploy Catalog Service
