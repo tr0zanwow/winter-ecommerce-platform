@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  TARGET_INFRA: eks  # Target Infrastructure Strategy Toggle: 'eks' or 'apprunner'
+
 jobs:
   detect-changes:
     name: Detect Changed Components
@@ -68,7 +71,7 @@ jobs:
 
       - name: Execute CDK Diff
         working-directory: infrastructure
-        run: npx cdk diff
+        run: npx cdk diff -c targetInfra=${{ env.TARGET_INFRA }}
 
   cdk-deploy:
     name: CDK Deploy (Push)
@@ -97,16 +100,26 @@ jobs:
 
       - name: Execute CDK Deploy
         working-directory: infrastructure
-        run: npx cdk deploy --all --require-approval never
+        run: npx cdk deploy --all --require-approval never -c targetInfra=${{ env.TARGET_INFRA }}
 
       - name: Automate Cloudflare DNS Propagation Hook
         run: |
-          ALB_DNS=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?starts_with(LoadBalancerName, 'k8s-default-frontend-')] | sort_by(@, &CreatedTime) | [-1].DNSName" --output text)
-          if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
-            echo "Error: No load balancer found starting with k8s-default-frontend-"
-            exit 1
+          if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
+            ALB_DNS=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?starts_with(LoadBalancerName, 'k8s-default-frontend-')] | sort_by(@, &CreatedTime) | [-1].DNSName" --output text)
+            if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
+              echo "Error: No load balancer found starting with k8s-default-frontend-"
+              exit 1
+            fi
+            TARGET_DNS="$ALB_DNS"
+          else
+            APPRUNNER_DNS=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-frontend-bff'].ServiceUrl" --output text)
+            if [ -z "$APPRUNNER_DNS" ] || [ "$APPRUNNER_DNS" = "None" ]; then
+              echo "Error: No App Runner service found with name winter-frontend-bff"
+              exit 1
+            fi
+            TARGET_DNS="$APPRUNNER_DNS"
           fi
-          echo "Found active ALB DNS: $ALB_DNS"
+          echo "Found active target DNS: $TARGET_DNS"
 
           RECORD_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records?name=projects.pranilrathod.dev" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
@@ -121,16 +134,17 @@ jobs:
           UPDATE_RES=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records/$RECORD_ID" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data "{\"type\":\"CNAME\",\"name\":\"projects.pranilrathod.dev\",\"content\":\"$ALB_DNS\",\"ttl\":1,\"proxied\":true}")
+            --data "{\"type\":\"CNAME\",\"name\":\"projects.pranilrathod.dev\",\"content\":\"$TARGET_DNS\",\"ttl\":1,\"proxied\":true}")
 
           if echo "$UPDATE_RES" | grep -q '"success":true'; then
-            echo "Cloudflare DNS mapping successfully synchronized to: $ALB_DNS"
+            echo "Cloudflare DNS mapping successfully synchronized to: $TARGET_DNS"
           else
             echo "Error: Cloudflare DNS update failed. Response: $UPDATE_RES"
             exit 1
           fi
 
       - name: Deploy Monitoring Stack to EKS
+        if: env.TARGET_INFRA == 'eks'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
           kubectl apply -f infrastructure/k8s-monitoring/loki-stack.yaml
@@ -160,14 +174,27 @@ jobs:
           docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-catalog-service:latest
 
       - name: Update Kubeconfig
+        if: env.TARGET_INFRA == 'eks'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
 
       - name: Deploy Manifests to EKS
+        if: env.TARGET_INFRA == 'eks'
         run: |
           kubectl apply -f backend/catalog-service/k8s/deployment.yaml
           kubectl apply -f frontend/k8s/ingress.yaml
           kubectl rollout restart deployment/catalog-service-deployment
+
+      - name: Deploy to App Runner
+        if: env.TARGET_INFRA == 'apprunner'
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-catalog-service'].ServiceArn" --output text)
+          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
+            echo "Error: App Runner service winter-catalog-service not found"
+            exit 1
+          fi
+          echo "Triggering deployment for winter-catalog-service: $SERVICE_ARN"
+          aws apprunner start-deployment --service-arn $SERVICE_ARN
 
   deploy-order:
     name: Deploy Order Service
@@ -194,13 +221,26 @@ jobs:
           docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-order-service:latest
 
       - name: Update Kubeconfig
+        if: env.TARGET_INFRA == 'eks'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
 
       - name: Deploy Manifests to EKS
+        if: env.TARGET_INFRA == 'eks'
         run: |
           kubectl apply -f backend/order-service/k8s/deployment.yaml
           kubectl rollout restart deployment/order-service-deployment
+
+      - name: Deploy to App Runner
+        if: env.TARGET_INFRA == 'apprunner'
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-order-service'].ServiceArn" --output text)
+          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
+            echo "Error: App Runner service winter-order-service not found"
+            exit 1
+          fi
+          echo "Triggering deployment for winter-order-service: $SERVICE_ARN"
+          aws apprunner start-deployment --service-arn $SERVICE_ARN
 
   deploy-inventory:
     name: Deploy Inventory Service
@@ -240,14 +280,27 @@ jobs:
           docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-inventory-service:latest
 
       - name: Update Kubeconfig
+        if: env.TARGET_INFRA == 'eks'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
 
       - name: Deploy Manifests to EKS & Track Rollout
+        if: env.TARGET_INFRA == 'eks'
         run: |
           kubectl apply -f backend/inventory-service/k8s/deployment.yaml
           kubectl rollout restart deployment/inventory-service-deployment
           kubectl rollout status deployment/inventory-service-deployment --timeout=120s
+
+      - name: Deploy to App Runner
+        if: env.TARGET_INFRA == 'apprunner'
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-inventory-service'].ServiceArn" --output text)
+          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
+            echo "Error: App Runner service winter-inventory-service not found"
+            exit 1
+          fi
+          echo "Triggering deployment for winter-inventory-service: $SERVICE_ARN"
+          aws apprunner start-deployment --service-arn $SERVICE_ARN
 
   deploy-frontend:
     name: Deploy Frontend BFF
@@ -274,14 +327,27 @@ jobs:
           docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-frontend-bff:latest
 
       - name: Update Kubeconfig
+        if: env.TARGET_INFRA == 'eks'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
 
       - name: Deploy Manifests to EKS
+        if: env.TARGET_INFRA == 'eks'
         run: |
           kubectl apply -f frontend/k8s/deployment.yaml
           kubectl apply -f frontend/k8s/ingress.yaml
           kubectl rollout restart deployment/frontend-deployment
+
+      - name: Deploy to App Runner
+        if: env.TARGET_INFRA == 'apprunner'
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-frontend-bff'].ServiceArn" --output text)
+          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
+            echo "Error: App Runner service winter-frontend-bff not found"
+            exit 1
+          fi
+          echo "Triggering deployment for winter-frontend-bff: $SERVICE_ARN"
+          aws apprunner start-deployment --service-arn $SERVICE_ARN
 
   deploy-payment:
     name: Deploy Payment Service
@@ -321,12 +387,24 @@ jobs:
           docker push 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-payment-service:latest
 
       - name: Update Kubeconfig
+        if: env.TARGET_INFRA == 'eks'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name WinterClusterE1A7478C-f496e17ffa8b48c2bc349244d407e9b9
 
       - name: Deploy Manifests to EKS & Track Rollout
+        if: env.TARGET_INFRA == 'eks'
         run: |
           kubectl apply -f backend/payment-service/k8s/deployment.yaml
           kubectl rollout restart deployment/payment-service-deployment
           kubectl rollout status deployment/payment-service-deployment --timeout=120s
 
+      - name: Deploy to App Runner
+        if: env.TARGET_INFRA == 'apprunner'
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-payment-service'].ServiceArn" --output text)
+          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
+            echo "Error: App Runner service winter-payment-service not found"
+            exit 1
+          fi
+          echo "Triggering deployment for winter-payment-service: $SERVICE_ARN"
+          aws apprunner start-deployment --service-arn $SERVICE_ARN

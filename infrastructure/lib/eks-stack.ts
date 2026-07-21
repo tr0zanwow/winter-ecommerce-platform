@@ -11,6 +11,10 @@ import { Construct } from 'constructs';
 
 export interface EksStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
+  database: rds.DatabaseInstance;
+  orderEventsTopic: sns.Topic;
+  inventoryUpdateQueue: sqs.Queue;
+  paymentProcessingQueue: sqs.Queue;
 }
 
 export class WinterEksStack extends cdk.Stack {
@@ -84,59 +88,15 @@ export class WinterEksStack extends cdk.Stack {
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
     });
 
-    // STEP 1: Implement the RDS PostgreSQL Construct
-    const database = new rds.DatabaseInstance(this, 'WinterSharedDatabase', {
-      engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_16,
-      }),
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
-      vpc: props.vpc,
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-      },
-      allocatedStorage: 20,
-      maxAllocatedStorage: 20,
-      storageType: rds.StorageType.GP2,
-      multiAz: false,
-      databaseName: 'winter_core',
-    });
-
     // Security Boundary: Allow TCP 5432 ingress from EKS cluster worker nodes to database
-    database.connections.allowFrom(cluster.connections, ec2.Port.tcp(5432));
-
-    // STEP 2: Implement the Managed SNS & SQS Constructs
-    const orderEventsTopic = new sns.Topic(this, 'WinterOrderEventsTopic', {
-      topicName: 'WinterOrderEventsTopic',
-      displayName: 'Winter Order Events Messaging Hub',
+    new ec2.CfnSecurityGroupIngress(this, 'EksToDbIngressRule', {
+      ipProtocol: 'tcp',
+      fromPort: 5432,
+      toPort: 5432,
+      groupId: props.database.connections.securityGroups[0].securityGroupId,
+      sourceSecurityGroupId: cluster.connections.securityGroups[0].securityGroupId,
+      description: 'Allow EKS worker nodes to connect to DB',
     });
-
-    const inventoryUpdateDlq = new sqs.Queue(this, 'WinterInventoryUpdateDlq', {
-      queueName: 'WinterInventoryUpdateDlq',
-    });
-
-    const inventoryUpdateQueue = new sqs.Queue(this, 'WinterInventoryUpdateQueue', {
-      queueName: 'WinterInventoryUpdateQueue',
-      deadLetterQueue: {
-        maxReceiveCount: 3,
-        queue: inventoryUpdateDlq,
-      },
-    });
-
-    orderEventsTopic.addSubscription(new snsSub.SqsSubscription(inventoryUpdateQueue));
-
-    const paymentProcessingDlq = new sqs.Queue(this, 'WinterPaymentProcessingDlq', {
-      queueName: 'WinterPaymentProcessingDlq',
-    });
-
-    const paymentProcessingQueue = new sqs.Queue(this, 'WinterPaymentProcessingQueue', {
-      queueName: 'WinterPaymentProcessingQueue',
-      deadLetterQueue: {
-        maxReceiveCount: 3,
-        queue: paymentProcessingDlq,
-      },
-    });
-
-    orderEventsTopic.addSubscription(new snsSub.SqsSubscription(paymentProcessingQueue));
 
     // STEP 3: Implement Zero-Trust IAM Roles for Service Accounts (IRSA)
     const orderServiceSA = cluster.addServiceAccount('OrderServiceSA', {
@@ -146,7 +106,7 @@ export class WinterEksStack extends cdk.Stack {
 
     orderServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
       actions: ['sns:Publish'],
-      resources: ['arn:aws:sns:us-east-1:880252974759:WinterOrderEventsTopic']
+      resources: [props.orderEventsTopic.topicArn]
     }));
 
     const inventoryServiceSA = cluster.addServiceAccount('InventoryServiceSA', {
@@ -157,8 +117,7 @@ export class WinterEksStack extends cdk.Stack {
     inventoryServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
       actions: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:ChangeMessageVisibility'],
       resources: [
-        'arn:aws:sns:us-east-1:880252974759:WinterInventoryUpdateQueue',
-        'arn:aws:sqs:us-east-1:880252974759:WinterInventoryUpdateQueue'
+        props.inventoryUpdateQueue.queueArn
       ]
     }));
 
@@ -170,7 +129,7 @@ export class WinterEksStack extends cdk.Stack {
     paymentServiceSA.addToPrincipalPolicy(new iam.PolicyStatement({
       actions: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:ChangeMessageVisibility'],
       resources: [
-        paymentProcessingQueue.queueArn
+        props.paymentProcessingQueue.queueArn
       ]
     }));
   }
