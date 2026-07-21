@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  TARGET_INFRA: apprunner  # Target Infrastructure Strategy Toggle: 'eks' or 'apprunner'
+  TARGET_INFRA: express  # Target Infrastructure Strategy Toggle: 'eks' or 'express'
 
 jobs:
   detect-changes:
@@ -103,8 +103,8 @@ jobs:
         working-directory: infrastructure
         run: |
           if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
-            echo "Tearing down inactive App Runner Stack to prevent conflict..."
-            npx cdk destroy WinterAppRunnerStack --force -c targetInfra=apprunner || true
+            echo "Tearing down inactive ECS Express Stack to prevent conflict..."
+            npx cdk destroy WinterEcsExpressStack --force -c targetInfra=express || true
           else
             echo "Tearing down inactive EKS Stack to release shared resources..."
             npx cdk destroy WinterEksStackV2 --force -c targetInfra=eks || true
@@ -123,13 +123,16 @@ jobs:
               exit 1
             fi
             TARGET_DNS="$ALB_DNS"
-          else
-            APPRUNNER_DNS=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-frontend-bff'].ServiceUrl" --output text)
-            if [ -z "$APPRUNNER_DNS" ] || [ "$APPRUNNER_DNS" = "None" ]; then
-              echo "Error: No App Runner service found with name winter-frontend-bff"
+          elif [ "${{ env.TARGET_INFRA }}" = "express" ]; then
+            ALB_DNS=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?LoadBalancerName=='WinterEcsAlb'].DNSName" --output text)
+            if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
+              echo "Error: No load balancer found with name WinterEcsAlb"
               exit 1
             fi
-            TARGET_DNS="$APPRUNNER_DNS"
+            TARGET_DNS="$ALB_DNS"
+          else
+            echo "Unknown infrastructure target: ${{ env.TARGET_INFRA }}"
+            exit 1
           fi
           echo "Found active target DNS: $TARGET_DNS"
 
@@ -197,16 +200,10 @@ jobs:
           kubectl apply -f frontend/k8s/ingress.yaml
           kubectl rollout restart deployment/catalog-service-deployment
 
-      - name: Deploy to App Runner
-        if: env.TARGET_INFRA == 'apprunner'
+      - name: Deploy to ECS Express
+        if: env.TARGET_INFRA == 'express'
         run: |
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-catalog-service'].ServiceArn" --output text)
-          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
-            echo "Error: App Runner service winter-catalog-service not found"
-            exit 1
-          fi
-          echo "Triggering deployment for winter-catalog-service: $SERVICE_ARN"
-          aws apprunner start-deployment --service-arn $SERVICE_ARN
+          aws ecs update-service --cluster WinterEcsCluster --service winter-catalog-service --force-new-deployment
 
   deploy-order:
     name: Deploy Order Service
@@ -243,16 +240,10 @@ jobs:
           kubectl apply -f backend/order-service/k8s/deployment.yaml
           kubectl rollout restart deployment/order-service-deployment
 
-      - name: Deploy to App Runner
-        if: env.TARGET_INFRA == 'apprunner'
+      - name: Deploy to ECS Express
+        if: env.TARGET_INFRA == 'express'
         run: |
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-order-service'].ServiceArn" --output text)
-          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
-            echo "Error: App Runner service winter-order-service not found"
-            exit 1
-          fi
-          echo "Triggering deployment for winter-order-service: $SERVICE_ARN"
-          aws apprunner start-deployment --service-arn $SERVICE_ARN
+          aws ecs update-service --cluster WinterEcsCluster --service winter-order-service --force-new-deployment
 
   deploy-inventory:
     name: Deploy Inventory Service
@@ -303,16 +294,10 @@ jobs:
           kubectl rollout restart deployment/inventory-service-deployment
           kubectl rollout status deployment/inventory-service-deployment --timeout=120s
 
-      - name: Deploy to App Runner
-        if: env.TARGET_INFRA == 'apprunner'
+      - name: Deploy to ECS Express
+        if: env.TARGET_INFRA == 'express'
         run: |
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-inventory-service'].ServiceArn" --output text)
-          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
-            echo "Error: App Runner service winter-inventory-service not found"
-            exit 1
-          fi
-          echo "Triggering deployment for winter-inventory-service: $SERVICE_ARN"
-          aws apprunner start-deployment --service-arn $SERVICE_ARN
+          aws ecs update-service --cluster WinterEcsCluster --service winter-inventory-service --force-new-deployment
 
   deploy-frontend:
     name: Deploy Frontend BFF
@@ -350,16 +335,10 @@ jobs:
           kubectl apply -f frontend/k8s/ingress.yaml
           kubectl rollout restart deployment/frontend-deployment
 
-      - name: Deploy to App Runner
-        if: env.TARGET_INFRA == 'apprunner'
+      - name: Deploy to ECS Express
+        if: env.TARGET_INFRA == 'express'
         run: |
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-frontend-bff'].ServiceArn" --output text)
-          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
-            echo "Error: App Runner service winter-frontend-bff not found"
-            exit 1
-          fi
-          echo "Triggering deployment for winter-frontend-bff: $SERVICE_ARN"
-          aws apprunner start-deployment --service-arn $SERVICE_ARN
+          aws ecs update-service --cluster WinterEcsCluster --service winter-frontend-bff --force-new-deployment
 
   deploy-payment:
     name: Deploy Payment Service
@@ -410,13 +389,7 @@ jobs:
           kubectl rollout restart deployment/payment-service-deployment
           kubectl rollout status deployment/payment-service-deployment --timeout=120s
 
-      - name: Deploy to App Runner
-        if: env.TARGET_INFRA == 'apprunner'
+      - name: Deploy to ECS Express
+        if: env.TARGET_INFRA == 'express'
         run: |
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='winter-payment-service'].ServiceArn" --output text)
-          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
-            echo "Error: App Runner service winter-payment-service not found"
-            exit 1
-          fi
-          echo "Triggering deployment for winter-payment-service: $SERVICE_ARN"
-          aws apprunner start-deployment --service-arn $SERVICE_ARN
+          aws ecs update-service --cluster WinterEcsCluster --service winter-payment-service --force-new-deployment
