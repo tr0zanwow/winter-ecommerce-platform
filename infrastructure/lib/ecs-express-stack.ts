@@ -161,6 +161,15 @@ export class WinterEcsExpressStack extends cdk.Stack {
       target: route53.RecordTarget.fromAlias(new targets.LoadBalancerTarget(alb)),
     });
 
+    const redisZone = new route53.PrivateHostedZone(this, 'RedisZone', {
+      vpc: props.vpc,
+      zoneName: 'redis-service',
+    });
+    new route53.ARecord(this, 'RedisLocalhostRecord', {
+      zone: redisZone,
+      target: route53.RecordTarget.fromValues('127.0.0.1'),
+    });
+
     // STEP 6: Fargate Service Instantiations
 
     // 1. Frontend BFF Service
@@ -229,6 +238,14 @@ export class WinterEcsExpressStack extends cdk.Stack {
       secrets: {
         DATABASE_URL: ecs.Secret.fromSecretsManager(secret, 'MONGODB_URI'),
       },
+    });
+    catalogTaskDef.addContainer('redis', {
+      image: ecs.ContainerImage.fromRegistry('redis:7-alpine'),
+      logging: ecs.LogDrivers.awsLogs({
+        logGroup,
+        streamPrefix: 'catalog-redis',
+      }),
+      portMappings: [{ containerPort: 6379 }],
     });
 
     const catalogService = new ecs.FargateService(this, 'CatalogService', {
