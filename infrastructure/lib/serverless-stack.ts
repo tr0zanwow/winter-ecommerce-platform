@@ -43,9 +43,6 @@ export class WinterServerlessStack extends cdk.Stack {
       },
     });
 
-    // 2. Neon.tech PostgreSQL connection string for Order Service
-    const neonDbUrl = 'postgresql://neondb_owner:npg_w7nbtguPcN6m@ep-misty-meadow-avflhh6j.c-11.us-east-1.aws.neon.tech/neondb?sslmode=require';
-
     // 3. Lambda Docker Image Functions
 
     // Frontend BFF Function
@@ -79,7 +76,7 @@ export class WinterServerlessStack extends cdk.Stack {
     });
     secret.grantRead(catalogFunction);
 
-    // Order Service Function
+    // Order Service Function (Reads NEON_DATABASE_URL from Secrets Manager)
     const orderFunction = new lambda.DockerImageFunction(this, 'OrderLambda', {
       code: lambda.DockerImageCode.fromEcr(
         ecr.Repository.fromRepositoryName(this, 'OrderEcrRepo', 'winter-order-service'),
@@ -90,12 +87,11 @@ export class WinterServerlessStack extends cdk.Stack {
       environment: {
         PORT: '8081',
         AWS_LWA_PORT: '8081',
-        SPRING_DATASOURCE_URL: neonDbUrl,
-        SPRING_DATASOURCE_USERNAME: 'neondb_owner',
-        SPRING_DATASOURCE_PASSWORD: 'npg_w7nbtguPcN6m',
+        SPRING_DATASOURCE_URL: secret.secretValueFromJson('NEON_DATABASE_URL').unsafeUnwrap(),
         SPRING_SNS_TOPIC_ARN: props.orderEventsTopic.topicArn,
       },
     });
+    secret.grantRead(orderFunction);
     props.orderEventsTopic.grantPublish(orderFunction);
 
     // Inventory Service Function (SQS Consumer)
