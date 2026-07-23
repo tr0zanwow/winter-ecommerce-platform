@@ -290,6 +290,21 @@ export class WinterEcsExpressStack extends cdk.Stack {
       executionRole,
       taskRole: orderServiceTaskRole,
     });
+    const orderEnv: { [key: string]: string } = {};
+    const orderSecrets: { [key: string]: ecs.Secret } = {};
+
+    if (props.database) {
+      orderEnv['SPRING_DATASOURCE_URL'] = `jdbc:postgresql://${props.database.dbInstanceEndpointAddress}:${props.database.dbInstanceEndpointPort}/winter_core`;
+      orderEnv['SPRING_DATASOURCE_USERNAME'] = 'postgres';
+      if (props.database.secret) {
+        orderSecrets['SPRING_DATASOURCE_PASSWORD'] = ecs.Secret.fromSecretsManager(props.database.secret, 'password');
+      }
+    } else {
+      orderSecrets['SPRING_DATASOURCE_URL'] = ecs.Secret.fromSecretsManager(secret, 'NEON_DB_URL');
+      orderSecrets['SPRING_DATASOURCE_USERNAME'] = ecs.Secret.fromSecretsManager(secret, 'NEON_DB_USER');
+      orderSecrets['SPRING_DATASOURCE_PASSWORD'] = ecs.Secret.fromSecretsManager(secret, 'NEON_DB_PASSWORD');
+    }
+
     orderTaskDef.addContainer('order', {
       image: ecs.ContainerImage.fromRegistry(`${account}.dkr.ecr.${region}.amazonaws.com/winter-order-service:latest`),
       logging: ecs.LogDrivers.awsLogs({
@@ -297,13 +312,8 @@ export class WinterEcsExpressStack extends cdk.Stack {
         streamPrefix: 'order-service',
       }),
       portMappings: [{ containerPort: 8081 }],
-      environment: {
-        SPRING_DATASOURCE_URL: props.database ? `jdbc:postgresql://${props.database.dbInstanceEndpointAddress}:${props.database.dbInstanceEndpointPort}/winter_core` : '',
-        SPRING_DATASOURCE_USERNAME: 'postgres',
-      },
-      secrets: props.database?.secret ? {
-        SPRING_DATASOURCE_PASSWORD: ecs.Secret.fromSecretsManager(props.database.secret, 'password'),
-      } : undefined,
+      environment: orderEnv,
+      secrets: orderSecrets,
     });
 
     const orderService = new ecs.FargateService(this, 'OrderService', {

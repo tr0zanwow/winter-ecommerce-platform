@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  TARGET_INFRA: serverless  # Target Infrastructure Strategy Toggle: 'serverless', 'express', 'eks', or 'apprunner'
+  TARGET_INFRA: express  # Target Infrastructure Strategy Toggle: 'serverless', 'express', 'eks', or 'apprunner'
 
 jobs:
   detect-changes:
