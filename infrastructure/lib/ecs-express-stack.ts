@@ -14,7 +14,7 @@ import { Construct } from 'constructs';
 
 export interface EcsExpressStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
-  database: rds.DatabaseInstance;
+  database?: rds.DatabaseInstance;
   orderEventsTopic: sns.ITopic;
   inventoryUpdateQueue: sqs.IQueue;
   paymentProcessingQueue: sqs.IQueue;
@@ -87,14 +87,16 @@ export class WinterEcsExpressStack extends cdk.Stack {
     taskSg.addIngressRule(albSg, ec2.Port.tcp(8081), 'Allow traffic from ALB on port 8081');
 
     // Security Boundary: Ingress rule on Database SG to allow ECS Task SG access
-    new ec2.CfnSecurityGroupIngress(this, 'EcsToDbIngressRule', {
-      ipProtocol: 'tcp',
-      fromPort: 5432,
-      toPort: 5432,
-      groupId: props.database.connections.securityGroups[0].securityGroupId,
-      sourceSecurityGroupId: taskSg.securityGroupId,
-      description: 'Allow ECS tasks to connect to DB',
-    });
+    if (props.database) {
+      new ec2.CfnSecurityGroupIngress(this, 'EcsToDbIngressRule', {
+        ipProtocol: 'tcp',
+        fromPort: 5432,
+        toPort: 5432,
+        groupId: props.database.connections.securityGroups[0].securityGroupId,
+        sourceSecurityGroupId: taskSg.securityGroupId,
+        description: 'Allow ECS tasks to connect to DB',
+      });
+    }
 
     // STEP 4: IAM Task Roles
     const executionRole = new iam.Role(this, 'EcsExecutionRole', {
@@ -296,12 +298,12 @@ export class WinterEcsExpressStack extends cdk.Stack {
       }),
       portMappings: [{ containerPort: 8081 }],
       environment: {
-        SPRING_DATASOURCE_URL: `jdbc:postgresql://${props.database.dbInstanceEndpointAddress}:${props.database.dbInstanceEndpointPort}/winter_core`,
+        SPRING_DATASOURCE_URL: props.database ? `jdbc:postgresql://${props.database.dbInstanceEndpointAddress}:${props.database.dbInstanceEndpointPort}/winter_core` : '',
         SPRING_DATASOURCE_USERNAME: 'postgres',
       },
-      secrets: {
-        SPRING_DATASOURCE_PASSWORD: ecs.Secret.fromSecretsManager(props.database.secret!, 'password'),
-      },
+      secrets: props.database?.secret ? {
+        SPRING_DATASOURCE_PASSWORD: ecs.Secret.fromSecretsManager(props.database.secret, 'password'),
+      } : undefined,
     });
 
     const orderService = new ecs.FargateService(this, 'OrderService', {

@@ -11,7 +11,7 @@ import { Construct } from 'constructs';
 
 export interface EksStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
-  database: rds.DatabaseInstance;
+  database?: rds.DatabaseInstance;
   orderEventsTopic: sns.Topic;
   inventoryUpdateQueue: sqs.Queue;
   paymentProcessingQueue: sqs.Queue;
@@ -89,14 +89,16 @@ export class WinterEksStack extends cdk.Stack {
     });
 
     // Security Boundary: Allow TCP 5432 ingress from EKS cluster worker nodes to database
-    new ec2.CfnSecurityGroupIngress(this, 'EksToDbIngressRule', {
-      ipProtocol: 'tcp',
-      fromPort: 5432,
-      toPort: 5432,
-      groupId: props.database.connections.securityGroups[0].securityGroupId,
-      sourceSecurityGroupId: cluster.connections.securityGroups[0].securityGroupId,
-      description: 'Allow EKS worker nodes to connect to DB',
-    });
+    if (props.database) {
+      new ec2.CfnSecurityGroupIngress(this, 'EksToDbIngressRule', {
+        ipProtocol: 'tcp',
+        fromPort: 5432,
+        toPort: 5432,
+        groupId: props.database.connections.securityGroups[0].securityGroupId,
+        sourceSecurityGroupId: cluster.connections.securityGroups[0].securityGroupId,
+        description: 'Allow EKS worker nodes to connect to DB',
+      });
+    }
 
     // STEP 3: Implement Zero-Trust IAM Roles for Service Accounts (IRSA)
     const orderServiceSA = cluster.addServiceAccount('OrderServiceSA', {

@@ -14,8 +14,11 @@ RUN npm prune --production
 
 # Stage 3: Minimal Production Runtime
 FROM node:24-alpine AS runtime
+# Copy AWS Lambda Web Adapter extension binary
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.1 /lambda-adapter /opt/extensions/lambda-adapter
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=3000
 
 # Instantiate a secure, non-root system group and user context
 RUN addgroup -S nestgroup && adduser -S nestuser -G nestgroup

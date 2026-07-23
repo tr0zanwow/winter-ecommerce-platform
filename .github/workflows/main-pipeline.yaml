@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  TARGET_INFRA: express  # Target Infrastructure Strategy Toggle: 'eks' or 'express'
+  TARGET_INFRA: serverless  # Target Infrastructure Strategy Toggle: 'serverless', 'express', 'eks', or 'apprunner'
 
 jobs:
   detect-changes:
@@ -102,12 +102,18 @@ jobs:
       - name: Tear Down Inactive Infrastructure Strategy
         working-directory: infrastructure
         run: |
-          if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
-            echo "Tearing down inactive ECS Express Stack to prevent conflict..."
-            npx cdk destroy WinterEcsExpressStack --force -c targetInfra=express || true
-          else
-            echo "Tearing down inactive EKS Stack to release shared resources..."
+          if [ "${{ env.TARGET_INFRA }}" = "serverless" ]; then
+            echo "Tearing down inactive EKS and ECS stacks..."
             npx cdk destroy WinterEksStackV2 --force -c targetInfra=eks || true
+            npx cdk destroy WinterEcsExpressStack --force -c targetInfra=express || true
+          elif [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
+            echo "Tearing down inactive ECS and Serverless stacks..."
+            npx cdk destroy WinterEcsExpressStack --force -c targetInfra=express || true
+            npx cdk destroy WinterServerlessStack --force -c targetInfra=serverless || true
+          else
+            echo "Tearing down inactive EKS and Serverless stacks..."
+            npx cdk destroy WinterEksStackV2 --force -c targetInfra=eks || true
+            npx cdk destroy WinterServerlessStack --force -c targetInfra=serverless || true
           fi
 
       - name: Execute CDK Deploy
@@ -116,14 +122,21 @@ jobs:
 
       - name: Automate Cloudflare DNS Propagation Hook
         run: |
-          if [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
+          if [ "${{ env.TARGET_INFRA }}" = "serverless" ]; then
+            API_ID=$(aws apigatewayv2 get-apis --query "Items[?Name=='WinterServerlessApi'].ApiId | [0]" --output text)
+            if [ -z "$API_ID" ] || [ "$API_ID" = "None" ]; then
+              echo "Error: No API Gateway found with name WinterServerlessApi"
+              exit 1
+            fi
+            TARGET_DNS="${API_ID}.execute-api.us-east-1.amazonaws.com"
+          elif [ "${{ env.TARGET_INFRA }}" = "eks" ]; then
             ALB_DNS=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?starts_with(LoadBalancerName, 'k8s-default-frontend-')] | sort_by(@, &CreatedTime) | [-1].DNSName" --output text)
             if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
               echo "Error: No load balancer found starting with k8s-default-frontend-"
               exit 1
             fi
             TARGET_DNS="$ALB_DNS"
-          elif [ "${{ env.TARGET_INFRA }}" = "express" ]; then
+          elif [ "${{ env.TARGET_INFRA }}" = "express" ] || [ "${{ env.TARGET_INFRA }}" = "apprunner" ]; then
             ALB_DNS=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?LoadBalancerName=='WinterEcsAlb'].DNSName" --output text)
             if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
               echo "Error: No load balancer found with name WinterEcsAlb"
@@ -201,9 +214,17 @@ jobs:
           kubectl rollout restart deployment/catalog-service-deployment
 
       - name: Deploy to ECS Express
-        if: env.TARGET_INFRA == 'express'
+        if: env.TARGET_INFRA == 'express' || env.TARGET_INFRA == 'apprunner'
         run: |
           aws ecs update-service --cluster WinterEcsCluster --service winter-catalog-service --force-new-deployment
+
+      - name: Deploy to Serverless Lambda
+        if: env.TARGET_INFRA == 'serverless'
+        run: |
+          LAMBDA_ARN=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'WinterServerlessStack-CatalogLambda')].FunctionName | [0]" --output text)
+          if [ -n "$LAMBDA_ARN" ] && [ "$LAMBDA_ARN" != "None" ]; then
+            aws lambda update-function-code --function-name "$LAMBDA_ARN" --image-uri 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-catalog-service:latest
+          fi
 
   deploy-order:
     name: Deploy Order Service
@@ -241,9 +262,17 @@ jobs:
           kubectl rollout restart deployment/order-service-deployment
 
       - name: Deploy to ECS Express
-        if: env.TARGET_INFRA == 'express'
+        if: env.TARGET_INFRA == 'express' || env.TARGET_INFRA == 'apprunner'
         run: |
           aws ecs update-service --cluster WinterEcsCluster --service winter-order-service --force-new-deployment
+
+      - name: Deploy to Serverless Lambda
+        if: env.TARGET_INFRA == 'serverless'
+        run: |
+          LAMBDA_ARN=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'WinterServerlessStack-OrderLambda')].FunctionName | [0]" --output text)
+          if [ -n "$LAMBDA_ARN" ] && [ "$LAMBDA_ARN" != "None" ]; then
+            aws lambda update-function-code --function-name "$LAMBDA_ARN" --image-uri 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-order-service:latest
+          fi
 
   deploy-inventory:
     name: Deploy Inventory Service
@@ -295,9 +324,17 @@ jobs:
           kubectl rollout status deployment/inventory-service-deployment --timeout=120s
 
       - name: Deploy to ECS Express
-        if: env.TARGET_INFRA == 'express'
+        if: env.TARGET_INFRA == 'express' || env.TARGET_INFRA == 'apprunner'
         run: |
           aws ecs update-service --cluster WinterEcsCluster --service winter-inventory-service --force-new-deployment
+
+      - name: Deploy to Serverless Lambda
+        if: env.TARGET_INFRA == 'serverless'
+        run: |
+          LAMBDA_ARN=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'WinterServerlessStack-InventoryLambda')].FunctionName | [0]" --output text)
+          if [ -n "$LAMBDA_ARN" ] && [ "$LAMBDA_ARN" != "None" ]; then
+            aws lambda update-function-code --function-name "$LAMBDA_ARN" --image-uri 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-inventory-service:latest
+          fi
 
   deploy-frontend:
     name: Deploy Frontend BFF
@@ -336,9 +373,17 @@ jobs:
           kubectl rollout restart deployment/frontend-deployment
 
       - name: Deploy to ECS Express
-        if: env.TARGET_INFRA == 'express'
+        if: env.TARGET_INFRA == 'express' || env.TARGET_INFRA == 'apprunner'
         run: |
           aws ecs update-service --cluster WinterEcsCluster --service winter-frontend-bff --force-new-deployment
+
+      - name: Deploy to Serverless Lambda
+        if: env.TARGET_INFRA == 'serverless'
+        run: |
+          LAMBDA_ARN=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'WinterServerlessStack-FrontendLambda')].FunctionName | [0]" --output text)
+          if [ -n "$LAMBDA_ARN" ] && [ "$LAMBDA_ARN" != "None" ]; then
+            aws lambda update-function-code --function-name "$LAMBDA_ARN" --image-uri 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-frontend-bff:latest
+          fi
 
   deploy-payment:
     name: Deploy Payment Service
@@ -390,6 +435,14 @@ jobs:
           kubectl rollout status deployment/payment-service-deployment --timeout=120s
 
       - name: Deploy to ECS Express
-        if: env.TARGET_INFRA == 'express'
+        if: env.TARGET_INFRA == 'express' || env.TARGET_INFRA == 'apprunner'
         run: |
           aws ecs update-service --cluster WinterEcsCluster --service winter-payment-service --force-new-deployment
+
+      - name: Deploy to Serverless Lambda
+        if: env.TARGET_INFRA == 'serverless'
+        run: |
+          LAMBDA_ARN=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'WinterServerlessStack-PaymentLambda')].FunctionName | [0]" --output text)
+          if [ -n "$LAMBDA_ARN" ] && [ "$LAMBDA_ARN" != "None" ]; then
+            aws lambda update-function-code --function-name "$LAMBDA_ARN" --image-uri 880252974759.dkr.ecr.us-east-1.amazonaws.com/winter-payment-service:latest
+          fi
