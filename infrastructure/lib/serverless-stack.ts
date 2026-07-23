@@ -89,7 +89,9 @@ export class WinterServerlessStack extends cdk.Stack {
       environment: {
         PORT: '8081',
         AWS_LWA_PORT: '8081',
-        SPRING_DATASOURCE_URL: secret.secretValueFromJson('NEON_DATABASE_URL').unsafeUnwrap(),
+        SPRING_DATASOURCE_URL: secret.secretValueFromJson('NEON_DB_URL').unsafeUnwrap(),
+        SPRING_DATASOURCE_USERNAME: secret.secretValueFromJson('NEON_DB_USER').unsafeUnwrap(),
+        SPRING_DATASOURCE_PASSWORD: secret.secretValueFromJson('NEON_DB_PASSWORD').unsafeUnwrap(),
         SPRING_SNS_TOPIC_ARN: props.orderEventsTopic.topicArn,
       },
     });
