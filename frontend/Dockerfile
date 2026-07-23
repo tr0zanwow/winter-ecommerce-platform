@@ -15,6 +15,8 @@ RUN npm run build
 
 # Stage 3: Production image, copy all the files and run next
 FROM node:24-alpine AS runner
+# Copy AWS Lambda Web Adapter extension binary
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.1 /lambda-adapter /opt/extensions/lambda-adapter
 WORKDIR /app
 
 ENV NODE_ENV production

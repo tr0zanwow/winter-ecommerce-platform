@@ -8,7 +8,7 @@ import { Construct } from 'constructs';
 
 export class WinterVpcStack extends cdk.Stack {
   public readonly vpc: ec2.IVpc;
-  public readonly database: rds.DatabaseInstance;
+  public readonly database?: rds.DatabaseInstance;
   public readonly orderEventsTopic: sns.Topic;
   public readonly inventoryUpdateQueue: sqs.Queue;
   public readonly paymentProcessingQueue: sqs.Queue;
@@ -39,22 +39,25 @@ export class WinterVpcStack extends cdk.Stack {
       ],
     });
 
-    // Shared RDS PostgreSQL Construct
-    this.database = new rds.DatabaseInstance(this, 'WinterSharedDatabase', {
-      engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_16,
-      }),
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
-      vpc: this.vpc,
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-      },
-      allocatedStorage: 20,
-      maxAllocatedStorage: 20,
-      storageType: rds.StorageType.GP2,
-      multiAz: false,
-      databaseName: 'winter_core',
-    });
+    // Shared RDS PostgreSQL Construct (only created if targetInfra is 'eks' or enableRds is explicitly set)
+    const enableRds = this.node.tryGetContext('enableRds') === 'true' || this.node.tryGetContext('targetInfra') === 'eks';
+    if (enableRds) {
+      this.database = new rds.DatabaseInstance(this, 'WinterSharedDatabase', {
+        engine: rds.DatabaseInstanceEngine.postgres({
+          version: rds.PostgresEngineVersion.VER_16,
+        }),
+        instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
+        vpc: this.vpc,
+        vpcSubnets: {
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        },
+        allocatedStorage: 20,
+        maxAllocatedStorage: 20,
+        storageType: rds.StorageType.GP2,
+        multiAz: false,
+        databaseName: 'winter_core',
+      });
+    }
 
     // Shared SNS & SQS Constructs
     this.orderEventsTopic = new sns.Topic(this, 'WinterOrderEventsTopic', {
