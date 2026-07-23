@@ -211,7 +211,7 @@ export class WinterEcsExpressStack extends cdk.Stack {
 
     // Route public port 80 to Frontend BFF path `/winter*`
     httpListener.addTargetGroups('FrontendTargetRule', {
-      priority: 3,
+      priority: 30,
       conditions: [elbv2.ListenerCondition.pathPatterns(['/winter*'])],
       targetGroups: [frontendTargetGroup],
     });
@@ -271,7 +271,7 @@ export class WinterEcsExpressStack extends cdk.Stack {
 
     // Route public port 80 to Catalog Service path `/winter/api/products*`
     httpListener.addTargetGroups('CatalogTargetRule', {
-      priority: 1,
+      priority: 10,
       conditions: [elbv2.ListenerCondition.pathPatterns(['/winter/api/products*'])],
       targetGroups: [catalogTargetGroup],
     });
@@ -327,7 +327,7 @@ export class WinterEcsExpressStack extends cdk.Stack {
 
     // Route public port 80 to Order Service path `/winter/api/orders*`
     httpListener.addTargetGroups('OrderTargetRule', {
-      priority: 2,
+      priority: 20,
       conditions: [elbv2.ListenerCondition.pathPatterns(['/winter/api/orders*'])],
       targetGroups: [orderTargetGroup],
     });
