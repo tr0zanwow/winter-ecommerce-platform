@@ -51,12 +51,13 @@ export class WinterServerlessStack extends cdk.Stack {
         ecr.Repository.fromRepositoryName(this, 'FrontendEcrRepo', 'winter-frontend-bff'),
         { tagOrDigest: 'latest' }
       ),
-      memorySize: 1024,
+      memorySize: 2048,
       timeout: cdk.Duration.seconds(30),
       environment: {
         NODE_ENV: 'production',
         PORT: '3000',
-        AWS_LWA_READINESS_CHECK_PATH: '/winter',
+        CATALOG_SERVICE_URL: this.httpApi.apiEndpoint,
+        ORDER_SERVICE_URL: this.httpApi.apiEndpoint,
       },
     });
 

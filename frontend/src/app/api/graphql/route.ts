@@ -68,12 +68,15 @@ const typeDefs = `#graphql
   }
 `;
 
+const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || 'http://catalog-service:3000';
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://order-service:8081';
+
 const resolvers = {
   JSON: jsonScalar,
   Query: {
     products: async () => {
       try {
-        const response = await fetch('http://catalog-service:3000/winter/api/products', {
+        const response = await fetch(`${CATALOG_SERVICE_URL}/winter/api/products`, {
           cache: 'no-store',
         });
         if (!response.ok) {
@@ -91,7 +94,7 @@ const resolvers = {
     },
     product: async (_: any, { slug }: { slug: string }) => {
       try {
-        const response = await fetch(`http://catalog-service:3000/winter/api/products/slug/${slug}`, {
+        const response = await fetch(`${CATALOG_SERVICE_URL}/winter/api/products/slug/${slug}`, {
           cache: 'no-store',
         });
         if (!response.ok) {
@@ -117,7 +120,7 @@ const resolvers = {
         if (page !== undefined) queryParams.append('page', String(page));
         if (size !== undefined) queryParams.append('size', String(size));
 
-        const response = await fetch(`http://order-service:8081/winter/api/orders?${queryParams.toString()}`, {
+        const response = await fetch(`${ORDER_SERVICE_URL}/winter/api/orders?${queryParams.toString()}`, {
           cache: 'no-store',
         });
         if (!response.ok) {
@@ -131,7 +134,7 @@ const resolvers = {
     },
     order: async (_: any, { id }: { id: string }) => {
       try {
-        const response = await fetch(`http://order-service:8081/winter/api/orders/${id}`, {
+        const response = await fetch(`${ORDER_SERVICE_URL}/winter/api/orders/${id}`, {
           cache: 'no-store',
         });
         if (!response.ok) {
@@ -150,7 +153,7 @@ const resolvers = {
   Mutation: {
     cancelOrder: async (_: any, { id }: { id: string }) => {
       try {
-        const response = await fetch(`http://order-service:8081/winter/api/orders/${id}/cancel`, {
+        const response = await fetch(`${ORDER_SERVICE_URL}/winter/api/orders/${id}/cancel`, {
           method: 'PATCH',
           cache: 'no-store',
         });
