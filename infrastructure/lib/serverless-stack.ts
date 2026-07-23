@@ -73,6 +73,7 @@ export class WinterServerlessStack extends cdk.Stack {
         NODE_ENV: 'production',
         PORT: '3000',
         DATABASE_URL: secret.secretValueFromJson('MONGODB_URI').unsafeUnwrap(),
+        REDIS_HOST: 'none',
       },
     });
     secret.grantRead(catalogFunction);

@@ -11,15 +11,23 @@ import { ProductsModule } from './products/products.module';
     MongooseModule.forRoot(process.env.DATABASE_URL!),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: 'redis-service',
-            port: 6379,
-          },
-          ttl: 3600 * 1000, // 1 hour default time-to-live
-        }),
-      }),
+      useFactory: async () => {
+        const redisHost = process.env.REDIS_HOST || 'redis-service';
+        if (redisHost === 'none') {
+          return {
+            ttl: 3600 * 1000, // 1 hour default time-to-live
+          };
+        }
+        return {
+          store: await redisStore({
+            socket: {
+              host: redisHost,
+              port: parseInt(process.env.REDIS_PORT || '6379'),
+            },
+            ttl: 3600 * 1000, // 1 hour default time-to-live
+          }),
+        };
+      },
     }),
     ProductsModule,
   ],
